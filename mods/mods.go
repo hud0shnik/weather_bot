@@ -105,15 +105,12 @@ type WeatherInfo struct {
 }
 
 func Sun(botUrl string, update Update) error {
-	s, c := GetPlace(update), 0
-	if s == "err" {
+	lat, lon := getCoordinates(update)
+	if lat == "err" {
 		SendMsg(botUrl, update, "Пожалуйста обновите свои координаты командой /set")
 		return nil
 	}
-	for ; s[c] != ' '; c++ {
-	}
-	lat := s[:c]
-	lon := s[c+1:]
+
 	url := "https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&lang=ru&exclude=minutely,alerts&units=metric&appid=" + viper.GetString("weatherToken")
 	req, _ := http.NewRequest("GET", url, nil)
 	res, err := http.DefaultClient.Do(req)
@@ -137,15 +134,11 @@ func Sun(botUrl string, update Update) error {
 }
 
 func SendDailyWeather(botUrl string, update Update, days int) error {
-	s, c := GetPlace(update), 0
-	if s == "err" {
+	lat, lon := getCoordinates(update)
+	if lat == "err" {
 		SendMsg(botUrl, update, "Пожалуйста обновите свои координаты командой /set")
 		return nil
 	}
-	for ; s[c] != ' '; c++ {
-	}
-	lat := s[:c]
-	lon := s[c+1:]
 
 	url := "https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&lang=ru&exclude=minutely,alerts&units=metric&appid=" + viper.GetString("weatherToken")
 	req, _ := http.NewRequest("GET", url, nil)
@@ -174,15 +167,11 @@ func SendDailyWeather(botUrl string, update Update, days int) error {
 }
 
 func SendCurrentWeather(botUrl string, update Update) error {
-	s, c := GetPlace(update), 0
-	if s == "err" {
+	lat, lon := getCoordinates(update)
+	if lat == "err" {
 		SendMsg(botUrl, update, "Пожалуйста обновите свои координаты командой /set")
 		return nil
 	}
-	for ; s[c] != ' '; c++ {
-	}
-	lat := s[:c]
-	lon := s[c+1:]
 	url := "https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&lang=ru&exclude=minutely,alerts&units=metric&appid=" + viper.GetString("weatherToken")
 	req, _ := http.NewRequest("GET", url, nil)
 	res, err := http.DefaultClient.Do(req)
@@ -251,4 +240,17 @@ func SetPlace(botUrl string, update Update) {
 
 	fmt.Println("coordinates.json Updated!")
 	SendMsg(botUrl, update, "updated!")
+}
+
+func getCoordinates(update Update) (string, string) {
+	s, c := GetPlace(update), 0
+	if s == "err" {
+		return "err", "err"
+	}
+	for ; s[c] != ' '; c++ {
+	}
+	lat := s[:c]
+	lon := s[c+1:]
+
+	return lat, lon
 }

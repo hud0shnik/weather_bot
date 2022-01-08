@@ -82,7 +82,7 @@ func respond(botUrl string, update mods.Update) error {
 		return nil
 	}
 
-	if len(msg) > 3 && msg[:4] == "/set" {
+	if len(msg) > 5 && msg[:4] == "/set" {
 		mods.SetPlace(botUrl, update)
 		mods.SendMsg(botUrl, update, "Your cords:"+msg[4:])
 		return nil
