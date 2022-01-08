@@ -189,10 +189,21 @@ func SetPlace(botUrl string, update Update) {
 	defer file.Close()
 
 	m := map[string]string{}
-	bodyU, _ := ioutil.ReadAll(file)
-	json.Unmarshal(bodyU, &m)
-	fmt.Println(m)
-	//file.WriteString("\"515845908\" : \"55.5692101 37.4588852\"")
+	m[strconv.Itoa(update.Message.Chat.ChatId)] = update.Message.Text[5:]
+
+	body, _ := ioutil.ReadAll(file)
+	json.Unmarshal(body, &m)
+
+	fileU, err := os.Create("weather/coordinates.json")
+	if err != nil {
+		fmt.Println("Unable to create file:", err)
+		os.Exit(1)
+	}
+	defer fileU.Close()
+
+	result, _ := json.Marshal(m)
+	fileU.Write(result)
+
 	fmt.Println("coordinates.json Updated!")
 	SendMsg(botUrl, update, "updated!")
 }
