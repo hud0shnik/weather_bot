@@ -61,7 +61,6 @@ func respond(botUrl string, update mods.Update) error {
 		return nil
 	case "/weather":
 		mods.SendCurrentWeather(botUrl, update)
-		mods.SendDailyWeather(botUrl, update, 2)
 		return nil
 	case "/sun":
 		mods.Sun(botUrl, update)
@@ -84,10 +83,10 @@ func respond(botUrl string, update mods.Update) error {
 
 	if len(msg) > 5 && msg[:4] == "/set" {
 		mods.SetPlace(botUrl, update)
-		mods.SendMsg(botUrl, update, "Your cords:"+msg[4:])
+		mods.SendMsg(botUrl, update, "Введённые координаты: "+msg[4:])
 		return nil
 	}
 
-	mods.SendMsg(botUrl, update, "Я не понимаю, воспользуйся /help")
+	mods.SendMsg(botUrl, update, "Я не понимаю, воспользуйтесь /help")
 	return nil
 }
