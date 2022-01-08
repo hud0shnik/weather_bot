@@ -197,24 +197,6 @@ func SendCurrentWeather(botUrl string, update Update) error {
 	return nil
 }
 
-func GetPlace(update Update) string {
-	file, err := os.Open("weather/coordinates.json")
-	if err != nil {
-		fmt.Println("Unable to create file:", err)
-		os.Exit(1)
-	}
-	defer file.Close()
-	m := map[string]string{}
-	body, _ := ioutil.ReadAll(file)
-	json.Unmarshal(body, &m)
-
-	if len(m[strconv.Itoa(update.Message.Chat.ChatId)]) < 5 {
-		return "err"
-	}
-
-	return m[strconv.Itoa(update.Message.Chat.ChatId)]
-}
-
 func SetPlace(botUrl string, update Update) {
 	file, err := os.Open("weather/coordinates.json")
 	if err != nil {
@@ -244,7 +226,22 @@ func SetPlace(botUrl string, update Update) {
 }
 
 func getCoordinates(update Update) (string, string) {
-	s, c := GetPlace(update), 0
+
+	file, err := os.Open("weather/coordinates.json")
+	if err != nil {
+		fmt.Println("Unable to create file:", err)
+		os.Exit(1)
+	}
+	defer file.Close()
+	m := map[string]string{}
+	body, _ := ioutil.ReadAll(file)
+	json.Unmarshal(body, &m)
+
+	if len(m[strconv.Itoa(update.Message.Chat.ChatId)]) < 5 {
+		return "err", "err"
+	}
+
+	s, c := m[strconv.Itoa(update.Message.Chat.ChatId)], 0
 	if s == "err" {
 		return "err", "err"
 	}
@@ -259,10 +256,12 @@ func getCoordinates(update Update) (string, string) {
 	lat := s[:c]
 	lon := s[c+1:]
 
-	_, err := strconv.ParseFloat(lat, 64)
-	_, err2 := strconv.ParseFloat(lon, 64)
-
-	if err != nil || err2 != nil {
+	_, err = strconv.ParseFloat(lat, 64)
+	if err != nil {
+		return "err", "err"
+	}
+	_, err = strconv.ParseFloat(lon, 64)
+	if err != nil {
 		return "err", "err"
 	}
 
