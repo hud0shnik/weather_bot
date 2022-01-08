@@ -193,6 +193,7 @@ func SendCurrentWeather(botUrl string, update Update) error {
 		"\n💧Влажность воздуха: " + strconv.Itoa(rs.Current.Humidity) + "%"
 
 	SendMsg(botUrl, update, result)
+	SendDailyWeather(botUrl, update, 2)
 	return nil
 }
 
@@ -239,7 +240,7 @@ func SetPlace(botUrl string, update Update) {
 	fileU.Write(result)
 
 	fmt.Println("coordinates.json Updated!")
-	SendMsg(botUrl, update, "updated!")
+	SendMsg(botUrl, update, "Записал координаты!")
 }
 
 func getCoordinates(update Update) (string, string) {
@@ -257,6 +258,13 @@ func getCoordinates(update Update) (string, string) {
 	}
 	lat := s[:c]
 	lon := s[c+1:]
+
+	_, err := strconv.ParseFloat(lat, 64)
+	_, err2 := strconv.ParseFloat(lon, 64)
+
+	if err != nil || err2 != nil {
+		return "err", "err"
+	}
 
 	return lat, lon
 }
