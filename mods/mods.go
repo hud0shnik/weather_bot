@@ -3,6 +3,7 @@ package mods
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -108,7 +109,7 @@ func Sun(botUrl string, update Update) error {
 	lat, lon := getCoordinates(update)
 	if lat == "err" {
 		SendMsg(botUrl, update, "Пожалуйста обновите свои координаты командой /set")
-		return nil
+		return errors.New("wrong coordinates")
 	}
 
 	url := "https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&lang=ru&exclude=minutely,alerts&units=metric&appid=" + viper.GetString("weatherToken")
@@ -137,7 +138,7 @@ func SendDailyWeather(botUrl string, update Update, days int) error {
 	lat, lon := getCoordinates(update)
 	if lat == "err" {
 		SendMsg(botUrl, update, "Пожалуйста обновите свои координаты командой /set")
-		return nil
+		return errors.New("wrong coordinates")
 	}
 
 	url := "https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&lang=ru&exclude=minutely,alerts&units=metric&appid=" + viper.GetString("weatherToken")
@@ -166,11 +167,17 @@ func SendDailyWeather(botUrl string, update Update, days int) error {
 	return nil
 }
 
+func SendThreeDaysWeather(botUrl string, update Update) {
+	if SendCurrentWeather(botUrl, update) == nil {
+		SendDailyWeather(botUrl, update, 2)
+	}
+}
+
 func SendCurrentWeather(botUrl string, update Update) error {
 	lat, lon := getCoordinates(update)
 	if lat == "err" {
 		SendMsg(botUrl, update, "Пожалуйста обновите свои координаты командой /set")
-		return nil
+		return errors.New("wrong coordinates")
 	}
 	url := "https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&lang=ru&exclude=minutely,alerts&units=metric&appid=" + viper.GetString("weatherToken")
 	req, _ := http.NewRequest("GET", url, nil)
@@ -193,7 +200,6 @@ func SendCurrentWeather(botUrl string, update Update) error {
 		"\n💧Влажность воздуха: " + strconv.Itoa(rs.Current.Humidity) + "%"
 
 	SendMsg(botUrl, update, result)
-	SendDailyWeather(botUrl, update, 2)
 	return nil
 }
 

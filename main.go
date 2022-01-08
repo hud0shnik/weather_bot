@@ -60,13 +60,13 @@ func respond(botUrl string, update mods.Update) error {
 		mods.SendDailyWeather(botUrl, update, 7)
 		return nil
 	case "/weather":
+		mods.SendThreeDaysWeather(botUrl, update)
+		return nil
+	case "/today":
 		mods.SendCurrentWeather(botUrl, update)
 		return nil
 	case "/sun":
 		mods.Sun(botUrl, update)
-		return nil
-	case "/today":
-		mods.SendCurrentWeather(botUrl, update)
 		return nil
 	case "/set":
 		mods.SendMsg(botUrl, update, "Вы не написали координаты, воспользуйтесь шаблоном ниже:\n\n/set 55.5692101 37.4588852")
