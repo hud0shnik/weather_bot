@@ -256,12 +256,12 @@ func getCoordinates(update Update) (string, string) {
 	lat := s[:c]
 	lon := s[c+1:]
 
-	_, err = strconv.ParseFloat(lat, 64)
-	if err != nil {
+	latFloat, err := strconv.ParseFloat(lat, 64)
+	if err != nil || latFloat > 90 || latFloat < -90 {
 		return "err", "err"
 	}
-	_, err = strconv.ParseFloat(lon, 64)
-	if err != nil {
+	lonFloat, err := strconv.ParseFloat(lon, 64)
+	if err != nil || lonFloat > 180 || lonFloat < -180 {
 		return "err", "err"
 	}
 
