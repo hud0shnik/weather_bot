@@ -226,13 +226,13 @@ func SetPlace(botUrl string, update Update) {
 }
 
 func getCoordinates(update Update) (string, string) {
-
 	file, err := os.Open("weather/coordinates.json")
 	if err != nil {
 		fmt.Println("Unable to create file:", err)
 		os.Exit(1)
 	}
 	defer file.Close()
+
 	m := map[string]string{}
 	body, _ := ioutil.ReadAll(file)
 	json.Unmarshal(body, &m)
@@ -241,29 +241,29 @@ func getCoordinates(update Update) (string, string) {
 		return "err", "err"
 	}
 
-	s, c := m[strconv.Itoa(update.Message.Chat.ChatId)], 0
-	if s == "err" {
+	coords, c := m[strconv.Itoa(update.Message.Chat.ChatId)], 0
+	if coords == "err" {
 		return "err", "err"
 	}
-	for ; c < len(s); c++ {
-		if s[c] == ' ' {
+
+	for ; c < len(coords); c++ {
+		if coords[c] == ' ' {
 			break
 		}
 	}
-	if c >= len(s) || c == 0 {
+
+	if c == len(coords) || c == 0 {
 		return "err", "err"
 	}
-	lat := s[:c]
-	lon := s[c+1:]
 
-	latFloat, err := strconv.ParseFloat(lat, 64)
+	latFloat, err := strconv.ParseFloat(coords[:c], 64)
 	if err != nil || latFloat > 90 || latFloat < -90 {
 		return "err", "err"
 	}
-	lonFloat, err := strconv.ParseFloat(lon, 64)
+	lonFloat, err := strconv.ParseFloat(coords[c+1:], 64)
 	if err != nil || lonFloat > 180 || lonFloat < -180 {
 		return "err", "err"
 	}
 
-	return lat, lon
+	return coords[:c], coords[c+1:]
 }
