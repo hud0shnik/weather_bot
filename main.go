@@ -56,17 +56,29 @@ func respond(botUrl string, update mods.Update) error {
 	msg := update.Message.Text
 
 	switch msg {
+	case "/week":
+		mods.SendDailyWeather(botUrl, update, 7)
+		return nil
 	case "/weather":
-		mods.SendDailyWeather(botUrl, update, 3)
+		mods.SendCurrentWeather(botUrl, update)
+		mods.SendDailyWeather(botUrl, update, 2)
 		return nil
 	case "/sun":
 		mods.Sun(botUrl, update)
+		return nil
+	case "/today":
+		mods.SendCurrentWeather(botUrl, update)
 		return nil
 	case "/set":
 		mods.SendMsg(botUrl, update, "Вы не написали координаты, воспользуйтесь шаблоном ниже:\n\n/set 55.5692101 37.4588852")
 		return nil
 	case "/help", "/start":
-		mods.SendMsg(botUrl, update, "/weather - узнать погоду")
+		mods.SendMsg(botUrl, update, "Команды: \n"+
+			"/set - установить координаты\n"+
+			"/weather - погода на сегодня и два следующих дня\n"+
+			"/today - погода на сегодня\n"+
+			"/week - погода на следующие 7 дней\n"+
+			"/sun - время восхода и заката на сегодня")
 		return nil
 	}
 
@@ -76,6 +88,6 @@ func respond(botUrl string, update mods.Update) error {
 		return nil
 	}
 
-	mods.SendMsg(botUrl, update, "I don't understand")
+	mods.SendMsg(botUrl, update, "Я не понимаю, воспользуйся /help")
 	return nil
 }
