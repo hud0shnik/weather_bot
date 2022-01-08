@@ -128,7 +128,16 @@ func Sun(botUrl string, update Update) error {
 }
 
 func SendDailyWeather(botUrl string, update Update, days int) error {
-	lat, lon := "55.5692101", "37.4588852"
+	s, c := GetPlace(update), 0
+	if s == "err" {
+		SendMsg(botUrl, update, "Пожалуйста обновите свои координаты командой /set")
+		return nil
+	}
+	for ; s[c] != ' '; c++ {
+	}
+	lat := s[:c]
+	lon := s[c+1:]
+	//lat, lon := "55.5692101", "37.4588852"
 	url := "https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&lang=ru&exclude=minutely,alerts&units=metric&appid=" + viper.GetString("weatherToken")
 	req, _ := http.NewRequest("GET", url, nil)
 	res, err := http.DefaultClient.Do(req)
@@ -180,6 +189,24 @@ func SendCurrentWeather(botUrl string, update Update) error {
 	return nil
 }
 
+func GetPlace(update Update) string {
+	file, err := os.Open("weather/coordinates.json")
+	if err != nil {
+		fmt.Println("Unable to create file:", err)
+		os.Exit(1)
+	}
+	defer file.Close()
+	m := map[string]string{}
+	body, _ := ioutil.ReadAll(file)
+	json.Unmarshal(body, &m)
+
+	if len(m[strconv.Itoa(update.Message.Chat.ChatId)]) < 5 {
+		return "err"
+	}
+
+	return m[strconv.Itoa(update.Message.Chat.ChatId)]
+}
+
 func SetPlace(botUrl string, update Update) {
 	file, err := os.Open("weather/coordinates.json")
 	if err != nil {
@@ -189,10 +216,10 @@ func SetPlace(botUrl string, update Update) {
 	defer file.Close()
 
 	m := map[string]string{}
-	m[strconv.Itoa(update.Message.Chat.ChatId)] = update.Message.Text[5:]
 
 	body, _ := ioutil.ReadAll(file)
 	json.Unmarshal(body, &m)
+	m[strconv.Itoa(update.Message.Chat.ChatId)] = update.Message.Text[5:]
 
 	fileU, err := os.Create("weather/coordinates.json")
 	if err != nil {
