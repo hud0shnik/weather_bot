@@ -247,7 +247,13 @@ func getCoordinates(update Update) (string, string) {
 	if s == "err" {
 		return "err", "err"
 	}
-	for ; s[c] != ' '; c++ {
+	for ; c < len(s); c++ {
+		if s[c] == ' ' {
+			break
+		}
+	}
+	if c >= len(s) || c == 0 {
+		return "err", "err"
 	}
 	lat := s[:c]
 	lon := s[c+1:]
