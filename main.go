@@ -55,14 +55,15 @@ func getUpdates(botUrl string, offset int) ([]mods.Update, error) {
 func respond(botUrl string, update mods.Update) error {
 	msg := update.Message.Text
 
-	if msg == "/help" || msg == "/start" {
-		mods.SendMsg(botUrl, update, "/weather - узнать погоду")
-		return nil
-	}
-
 	switch msg {
 	case "/weather":
-		mods.SendMsg(botUrl, update, "workin'")
+		mods.SendDailyWeather(botUrl, update, 3)
+		return nil
+	case "/sun":
+		mods.Sun(botUrl, update)
+		return nil
+	case "/help", "/start":
+		mods.SendMsg(botUrl, update, "/weather - узнать погоду")
 		return nil
 	}
 
