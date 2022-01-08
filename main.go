@@ -62,6 +62,9 @@ func respond(botUrl string, update mods.Update) error {
 	case "/sun":
 		mods.Sun(botUrl, update)
 		return nil
+	case "/set":
+		mods.SetPlace(botUrl, update)
+		return nil
 	case "/help", "/start":
 		mods.SendMsg(botUrl, update, "/weather - узнать погоду")
 		return nil

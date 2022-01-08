@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -127,7 +128,8 @@ func Sun(botUrl string, update Update) error {
 }
 
 func SendDailyWeather(botUrl string, update Update, days int) error {
-	url := "https://api.openweathermap.org/data/2.5/onecall?lat=55.5692101&lon=37.4588852&lang=ru&exclude=minutely,alerts&units=metric&appid=" + viper.GetString("weatherToken")
+	lat, lon := "55.5692101", "37.4588852"
+	url := "https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&lang=ru&exclude=minutely,alerts&units=metric&appid=" + viper.GetString("weatherToken")
 	req, _ := http.NewRequest("GET", url, nil)
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -176,4 +178,21 @@ func SendCurrentWeather(botUrl string, update Update) error {
 
 	SendMsg(botUrl, update, result)
 	return nil
+}
+
+func SetPlace(botUrl string, update Update) {
+	file, err := os.Open("weather/coordinates.json")
+	if err != nil {
+		fmt.Println("Unable to create file:", err)
+		os.Exit(1)
+	}
+	defer file.Close()
+
+	m := map[string]string{}
+	bodyU, _ := ioutil.ReadAll(file)
+	json.Unmarshal(bodyU, &m)
+	fmt.Println(m)
+	//file.WriteString("\"515845908\" : \"55.5692101 37.4588852\"")
+	fmt.Println("coordinates.json Updated!")
+	SendMsg(botUrl, update, "updated!")
 }
