@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/viper"
 )
 
+// Структуры для работы с Telegram API
 type TelegramResponse struct {
 	Result []Update `json:"result"`
 }
@@ -37,14 +38,16 @@ type SendMessage struct {
 	Text   string `json:"text"`
 }
 
+// Структуры для работы с Openweather API
 type WeatherAPIResponse struct {
 	Current Current `json:"current"`
 	Daily   []Day   `json:"daily"`
 	Hourly  []Hour  `json:"hourly"`
 }
 
-type Hour struct {
-	Dt         int64         `json:"dt"`
+type Current struct {
+	Sunrise    int           `json:"sunrise"`
+	Sunset     int           `json:"sunset"`
 	Temp       float32       `json:"temp"`
 	Feels_like float32       `json:"feels_like"`
 	Humidity   int           `json:"humidity"`
@@ -63,27 +66,20 @@ type Day struct {
 	Humidity   int           `json:"humidity"`
 }
 
-type Temp struct {
-	/*
-		"night 0,1,2,3,4,5",
-		"morning 6,7,8,9,10,11",
-		"day 12,13,14,15,16,17",
-		"evening 18,19,20,21,22,23"
-	*/
-	Day     float32 `json:"day"`
-	Night   float32 `json:"night"`
-	Evening float32 `json:"eve"`
-	Morning float32 `json:"morn"`
-}
-
-type Current struct {
-	Sunrise    int           `json:"sunrise"`
-	Sunset     int           `json:"sunset"`
+type Hour struct {
+	Dt         int64         `json:"dt"`
 	Temp       float32       `json:"temp"`
 	Feels_like float32       `json:"feels_like"`
 	Humidity   int           `json:"humidity"`
 	Wind_speed float32       `json:"wind_speed"`
 	Weather    []WeatherInfo `json:"weather"`
+}
+
+type Temp struct {
+	Day     float32 `json:"day"`
+	Night   float32 `json:"night"`
+	Evening float32 `json:"eve"`
+	Morning float32 `json:"morn"`
 }
 
 type WeatherInfo struct {
@@ -170,7 +166,7 @@ func SendHourlyWeather(botUrl string, update Update, hours int) error {
 	var rs = new(WeatherAPIResponse)
 	json.Unmarshal(body, &rs)
 
-	// Вывод полученных данных пользователю
+	// Вывод полученных данных
 	for n := 1; n < hours+1; n++ {
 		SendMsg(botUrl, update, "Погода на "+time.Unix(rs.Hourly[n].Dt, 0).Format("15:04")+":\n \n"+
 			"На улице "+rs.Hourly[n].Weather[0].Description+
@@ -207,7 +203,7 @@ func SendDailyWeather(botUrl string, update Update, days int) error {
 	var rs = new(WeatherAPIResponse)
 	json.Unmarshal(body, &rs)
 
-	// Вывод полученных данных пользователю
+	// Вывод полученных данных
 	for n := 1; n < days+1; n++ {
 		SendMsg(botUrl, update, "Погода на "+time.Unix(rs.Daily[n].Dt, 0).Format("02/01/2006")+":\n \n"+
 			"На улице "+rs.Daily[n].Weather[0].Description+
@@ -221,8 +217,8 @@ func SendDailyWeather(botUrl string, update Update, days int) error {
 }
 
 func SendThreeDaysWeather(botUrl string, update Update) {
-	//Если просто добавить в свитч две команды, то
-	//при некорректных данных будут выводиться две ошибки
+	// Если просто добавить в switch две команды,
+	// то при некорректных данных будут выводиться две ошибки
 	if SendCurrentWeather(botUrl, update) == nil {
 		SendDailyWeather(botUrl, update, 2)
 	}
@@ -252,7 +248,7 @@ func SendCurrentWeather(botUrl string, update Update) error {
 	var rs = new(WeatherAPIResponse)
 	json.Unmarshal(body, &rs)
 
-	// Вывод полученных данных пользователю
+	// Вывод полученных данных
 	SendMsg(botUrl, update, "Погода на сегодня"+":\n \n"+
 		"На улице "+rs.Current.Weather[0].Description+
 		"\n🌡Температура: "+strconv.Itoa(int(rs.Current.Temp))+
@@ -275,7 +271,7 @@ func Help(botUrl string, update Update) {
 }
 
 func SetPlace(botUrl string, update Update) {
-	//Так как координаты записываются в json файл, его нужно открыть
+	// Открытие json файла для чтения координат
 	file, err := os.Open("weather/coordinates.json")
 	if err != nil {
 		fmt.Println("Unable to create file:", err)
@@ -283,15 +279,15 @@ func SetPlace(botUrl string, update Update) {
 	}
 	defer file.Close()
 
-	//Map в которую будет произведена запись всех координат
+	// Map, в которую будет произведена запись всех координат
 	var m map[string]string
 	body, _ := ioutil.ReadAll(file)
 	json.Unmarshal(body, &m)
 
-	//Добовляет введенную информацию в map или обновляет прошлую версию
+	// Добавление или обновление введенной информации в map
 	m[strconv.Itoa(update.Message.Chat.ChatId)] = update.Message.Text[5:]
 
-	//Записывает обновленные данные в json
+	// Запись обновленных данных в json
 	fileU, err := os.Create("weather/coordinates.json")
 	if err != nil {
 		fmt.Println("Unable to create file:", err)
@@ -300,12 +296,13 @@ func SetPlace(botUrl string, update Update) {
 	defer fileU.Close()
 	result, _ := json.Marshal(m)
 	fileU.Write(result)
-	//Уведомление о том, что все прошло успешно
+
+	//Уведомление об успешной записи данных
 	SendMsg(botUrl, update, "Записал координаты!")
 }
 
 func getCoordinates(update Update) (string, string) {
-	//Все координаты хранятся в json файле
+	// Чтение данных из json файла с координатами
 	file, err := os.Open("weather/coordinates.json")
 	if err != nil {
 		fmt.Println("Unable to create file:", err)
@@ -313,13 +310,13 @@ func getCoordinates(update Update) (string, string) {
 	}
 	defer file.Close()
 
-	//Map нужна для эффективной работы с данными
-	//Ключ - айди диалога; Значение - введенные координаты
+	// Map нужна для эффективной работы с данными
+	// Ключ - айди диалога; Значение - введенные координаты
 	var m map[string]string
 	body, _ := ioutil.ReadAll(file)
 	json.Unmarshal(body, &m)
 
-	//Достает координаты, которые пользователь ввел ранее
+	// Получение координат, которые пользователь ввел ранее
 	coords, c := m[strconv.Itoa(update.Message.Chat.ChatId)], 0
 
 	// с - переменная, отвечающая за расположение пробела
@@ -329,8 +326,8 @@ func getCoordinates(update Update) (string, string) {
 		}
 	}
 
-	//Если пробел в самом начале или его нет - ошибка
-	if c == len(coords) || c == 0 {
+	// Если пробел в самом начале или его нет - ошибка
+	if c == 0 || c == len(coords) {
 		return "err", "err"
 	}
 
@@ -340,7 +337,7 @@ func getCoordinates(update Update) (string, string) {
 		return "err", "err"
 	}
 
-	//У долготы тоже есть рамки: от -180 до 180
+	// У долготы тоже есть рамки: от -180 до 180
 	lonFloat, err := strconv.ParseFloat(coords[c+1:], 64)
 	if err != nil || !(lonFloat > -180 && lonFloat < 180) {
 		return "err", "err"
