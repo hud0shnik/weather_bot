@@ -59,6 +59,12 @@ func respond(botUrl string, update mods.Update) error {
 	case "/week":
 		mods.SendDailyWeather(botUrl, update, 7)
 		return nil
+	case "/hourly":
+		mods.SendHourlyWeather(botUrl, update, 3)
+		return nil
+	case "/hourly24":
+		mods.SendHourlyWeather(botUrl, update, 24)
+		return nil
 	case "/weather":
 		mods.SendThreeDaysWeather(botUrl, update)
 		return nil

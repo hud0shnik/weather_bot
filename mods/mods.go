@@ -65,6 +65,16 @@ func InitConfig() error {
 type WeatherAPIResponse struct {
 	Current Current `json:"current"`
 	Daily   []Day   `json:"daily"`
+	Hourly  []Hour  `json:"hourly"`
+}
+
+type Hour struct {
+	Dt         int64         `json:"dt"`
+	Temp       float32       `json:"temp"`
+	Feels_like float32       `json:"feels_like"`
+	Humidity   int           `json:"humidity"`
+	Wind_speed float32       `json:"wind_speed"`
+	Weather    []WeatherInfo `json:"weather"`
 }
 
 type Day struct {
@@ -132,6 +142,39 @@ func Sun(botUrl string, update Update) error {
 	SendMsg(botUrl, update, result)
 	return nil
 
+}
+
+func SendHourlyWeather(botUrl string, update Update, hours int) error {
+	lat, lon := getCoordinates(update)
+	if lat == "err" {
+		SendMsg(botUrl, update, "Пожалуйста обновите свои координаты командой /set")
+		return errors.New("wrong coordinates")
+	}
+
+	url := "https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&lang=ru&exclude=minutely,alerts&units=metric&appid=" + viper.GetString("weatherToken")
+	req, _ := http.NewRequest("GET", url, nil)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Println("weather API error")
+		SendMsg(botUrl, update, "weather API error")
+		return err
+	}
+	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
+	var rs = new(WeatherAPIResponse)
+	json.Unmarshal(body, &rs)
+
+	for n := 0; n < hours+1; n++ {
+		result := "Погода на " + time.Unix(rs.Hourly[n].Dt, 0).Format("15:04") + ":\n \n" +
+			"На улице " + rs.Hourly[n].Weather[0].Description +
+			"\n🌡Температура: " + strconv.Itoa(int(rs.Hourly[n].Temp)) + "°" +
+			"\n🤔Ощущается как: " + strconv.Itoa(int(rs.Hourly[n].Feels_like)) + "°" +
+			"\n💨Ветер: " + strconv.Itoa(int(rs.Hourly[n].Wind_speed)) + " м/с" +
+			"\n💧Влажность воздуха: " + strconv.Itoa(rs.Hourly[n].Humidity) + "%"
+
+		SendMsg(botUrl, update, result)
+	}
+	return nil
 }
 
 func SendDailyWeather(botUrl string, update Update, days int) error {
