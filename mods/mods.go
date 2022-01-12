@@ -245,9 +245,9 @@ func Help(botUrl string, update Update) {
 		"/set - установить координаты\n"+
 		"/weather - погода на сегодня и два следующих дня\n"+
 		"/current - погода прямо сейчас\n"+
-		"/week - погода на следующие 7 дней\n"+
 		"/hourly - погода на следующие 3 часа\n"+
 		"/hourly24 - погода на следующие 24 часа\n"+
+		"/week - погода на следующие 7 дней\n"+
 		"/sun - время восхода и заката на сегодня")
 }
 
@@ -286,19 +286,11 @@ func getCoordinates(update Update) (string, string) {
 		os.Exit(1)
 	}
 	defer file.Close()
-
 	m := map[string]string{}
 	body, _ := ioutil.ReadAll(file)
 	json.Unmarshal(body, &m)
 
-	if len(m[strconv.Itoa(update.Message.Chat.ChatId)]) < 5 {
-		return "err", "err"
-	}
-
 	coords, c := m[strconv.Itoa(update.Message.Chat.ChatId)], 0
-	if coords == "err" {
-		return "err", "err"
-	}
 
 	for ; c < len(coords); c++ {
 		if coords[c] == ' ' {
@@ -311,11 +303,11 @@ func getCoordinates(update Update) (string, string) {
 	}
 
 	latFloat, err := strconv.ParseFloat(coords[:c], 64)
-	if err != nil || latFloat > 90 || latFloat < -90 {
+	if err != nil || !(latFloat > -90 && latFloat < 90) {
 		return "err", "err"
 	}
 	lonFloat, err := strconv.ParseFloat(coords[c+1:], 64)
-	if err != nil || lonFloat > 180 || lonFloat < -180 {
+	if err != nil || !(lonFloat > -180 && lonFloat < 180) {
 		return "err", "err"
 	}
 
