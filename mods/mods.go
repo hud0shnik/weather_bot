@@ -135,11 +135,10 @@ func Sun(botUrl string, update Update) error {
 	var rs = new(WeatherAPIResponse)
 	json.Unmarshal(body, &rs)
 
-	result := "🌄 Восход и закат на сегодня 🌄\n \n" +
-		"🌅 Восход наступит в " + time.Unix(int64(rs.Current.Sunrise), 0).Add(3*time.Hour).Format("15:04:05") +
-		"\n🌇 А закат в " + time.Unix(int64(rs.Current.Sunset), 0).Add(3*time.Hour).Format("15:04:05")
+	SendMsg(botUrl, update, "🌄 Восход и закат на сегодня 🌄\n \n"+
+		"🌅 Восход наступит в "+time.Unix(int64(rs.Current.Sunrise), 0).Add(3*time.Hour).Format("15:04:05")+
+		"\n🌇 А закат в "+time.Unix(int64(rs.Current.Sunset), 0).Add(3*time.Hour).Format("15:04:05"))
 
-	SendMsg(botUrl, update, result)
 	return nil
 
 }
@@ -164,15 +163,13 @@ func SendHourlyWeather(botUrl string, update Update, hours int) error {
 	var rs = new(WeatherAPIResponse)
 	json.Unmarshal(body, &rs)
 
-	for n := 0; n < hours+1; n++ {
-		result := "Погода на " + time.Unix(rs.Hourly[n].Dt, 0).Format("15:04") + ":\n \n" +
-			"На улице " + rs.Hourly[n].Weather[0].Description +
-			"\n🌡Температура: " + strconv.Itoa(int(rs.Hourly[n].Temp)) + "°" +
-			"\n🤔Ощущается как: " + strconv.Itoa(int(rs.Hourly[n].Feels_like)) + "°" +
-			"\n💨Ветер: " + strconv.Itoa(int(rs.Hourly[n].Wind_speed)) + " м/с" +
-			"\n💧Влажность воздуха: " + strconv.Itoa(rs.Hourly[n].Humidity) + "%"
-
-		SendMsg(botUrl, update, result)
+	for n := 1; n < hours+1; n++ {
+		SendMsg(botUrl, update, "Погода на "+time.Unix(rs.Hourly[n].Dt, 0).Format("15:04")+":\n \n"+
+			"На улице "+rs.Hourly[n].Weather[0].Description+
+			"\n🌡Температура: "+strconv.Itoa(int(rs.Hourly[n].Temp))+"°"+
+			"\n🤔Ощущается как: "+strconv.Itoa(int(rs.Hourly[n].Feels_like))+"°"+
+			"\n💨Ветер: "+strconv.Itoa(int(rs.Hourly[n].Wind_speed))+" м/с"+
+			"\n💧Влажность воздуха: "+strconv.Itoa(rs.Hourly[n].Humidity)+"%")
 	}
 	return nil
 }
@@ -198,14 +195,12 @@ func SendDailyWeather(botUrl string, update Update, days int) error {
 	json.Unmarshal(body, &rs)
 
 	for n := 1; n < days+1; n++ {
-		result := "Погода на " + time.Unix(rs.Daily[n].Dt, 0).Format("02/01/2006") + ":\n \n" +
-			"На улице " + rs.Daily[n].Weather[0].Description +
-			"\n🌡Температура: " + strconv.Itoa(int(rs.Daily[n].Temp.Morning)) + "°" + " -> " + strconv.Itoa(int(rs.Daily[n].Temp.Evening)) + "°" +
-			"\n🤔Ощущается как: " + strconv.Itoa(int(rs.Daily[n].Feels_like.Morning)) + "°" + " -> " + strconv.Itoa(int(rs.Daily[n].Feels_like.Evening)) + "°" +
-			"\n💨Ветер: " + strconv.Itoa(int(rs.Daily[n].Wind_speed)) + " м/с" +
-			"\n💧Влажность воздуха: " + strconv.Itoa(rs.Daily[n].Humidity) + "%"
-
-		SendMsg(botUrl, update, result)
+		SendMsg(botUrl, update, "Погода на "+time.Unix(rs.Daily[n].Dt, 0).Format("02/01/2006")+":\n \n"+
+			"На улице "+rs.Daily[n].Weather[0].Description+
+			"\n🌡Температура: "+strconv.Itoa(int(rs.Daily[n].Temp.Morning))+"°"+" -> "+strconv.Itoa(int(rs.Daily[n].Temp.Evening))+"°"+
+			"\n🤔Ощущается как: "+strconv.Itoa(int(rs.Daily[n].Feels_like.Morning))+"°"+" -> "+strconv.Itoa(int(rs.Daily[n].Feels_like.Evening))+"°"+
+			"\n💨Ветер: "+strconv.Itoa(int(rs.Daily[n].Wind_speed))+" м/с"+
+			"\n💧Влажность воздуха: "+strconv.Itoa(rs.Daily[n].Humidity)+"%")
 	}
 	return nil
 }
@@ -235,15 +230,25 @@ func SendCurrentWeather(botUrl string, update Update) error {
 	var rs = new(WeatherAPIResponse)
 	json.Unmarshal(body, &rs)
 
-	result := "Погода на сегодня" + ":\n \n" +
-		"На улице " + rs.Current.Weather[0].Description +
-		"\n🌡Температура: " + strconv.Itoa(int(rs.Current.Temp)) +
-		"\n🤔Ощущается как: " + strconv.Itoa(int(rs.Current.Feels_like)) + "°" +
-		"\n💨Ветер: " + strconv.Itoa(int(rs.Current.Wind_speed)) + " м/с" +
-		"\n💧Влажность воздуха: " + strconv.Itoa(rs.Current.Humidity) + "%"
+	SendMsg(botUrl, update, "Погода на сегодня"+":\n \n"+
+		"На улице "+rs.Current.Weather[0].Description+
+		"\n🌡Температура: "+strconv.Itoa(int(rs.Current.Temp))+
+		"\n🤔Ощущается как: "+strconv.Itoa(int(rs.Current.Feels_like))+"°"+
+		"\n💨Ветер: "+strconv.Itoa(int(rs.Current.Wind_speed))+" м/с"+
+		"\n💧Влажность воздуха: "+strconv.Itoa(rs.Current.Humidity)+"%")
 
-	SendMsg(botUrl, update, result)
 	return nil
+}
+
+func Help(botUrl string, update Update) {
+	SendMsg(botUrl, update, "Команды: \n"+
+		"/set - установить координаты\n"+
+		"/weather - погода на сегодня и два следующих дня\n"+
+		"/current - погода прямо сейчас\n"+
+		"/week - погода на следующие 7 дней\n"+
+		"/hourly - погода на следующие 3 часа\n"+
+		"/hourly24 - погода на следующие 24 часа\n"+
+		"/sun - время восхода и заката на сегодня")
 }
 
 func SetPlace(botUrl string, update Update) {

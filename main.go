@@ -78,14 +78,7 @@ func respond(botUrl string, update mods.Update) error {
 		mods.SendMsg(botUrl, update, "Вы не написали координаты, воспользуйтесь шаблоном ниже:\n\n/set 55.5692101 37.4588852")
 		return nil
 	case "/help", "/start":
-		mods.SendMsg(botUrl, update, "Команды: \n"+
-			"/set - установить координаты\n"+
-			"/weather - погода на сегодня и два следующих дня\n"+
-			"/current - погода прямо сейчас\n"+
-			"/week - погода на следующие 7 дней\n"+
-			"/hourly - погода на следующие 3 часа\n"+
-			"/hourly24 - погода на следующие 24 часа\n"+
-			"/sun - время восхода и заката на сегодня")
+		mods.Help(botUrl, update)
 		return nil
 	}
 
