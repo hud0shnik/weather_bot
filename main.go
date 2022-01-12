@@ -68,7 +68,7 @@ func respond(botUrl string, update mods.Update) error {
 	case "/weather":
 		mods.SendThreeDaysWeather(botUrl, update)
 		return nil
-	case "/today":
+	case "/current":
 		mods.SendCurrentWeather(botUrl, update)
 		return nil
 	case "/sun":
@@ -81,8 +81,10 @@ func respond(botUrl string, update mods.Update) error {
 		mods.SendMsg(botUrl, update, "Команды: \n"+
 			"/set - установить координаты\n"+
 			"/weather - погода на сегодня и два следующих дня\n"+
-			"/today - погода на сегодня\n"+
+			"/current - погода прямо сейчас\n"+
 			"/week - погода на следующие 7 дней\n"+
+			"/hourly - погода на следующие 3 часа\n"+
+			"/hourly24 - погода на следующие 24 часа\n"+
 			"/sun - время восхода и заката на сегодня")
 		return nil
 	}
