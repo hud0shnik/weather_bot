@@ -37,31 +37,6 @@ type SendMessage struct {
 	Text   string `json:"text"`
 }
 
-func SendMsg(botUrl string, update Update, msg string) error {
-	botMessage := SendMessage{
-		ChatId: update.Message.Chat.ChatId,
-		Text:   msg,
-	}
-	buf, err := json.Marshal(botMessage)
-	if err != nil {
-		fmt.Println("Marshal json error: ", err)
-		return err
-	}
-	_, err = http.Post(botUrl+"/sendMessage", "application/json", bytes.NewBuffer(buf))
-	if err != nil {
-		fmt.Println("SendMessage method error: ", err)
-		return err
-	}
-	return nil
-}
-
-func InitConfig() error {
-	viper.AddConfigPath("configs")
-	viper.SetConfigName("config")
-
-	return viper.ReadInConfig()
-}
-
 type WeatherAPIResponse struct {
 	Current Current `json:"current"`
 	Daily   []Day   `json:"daily"`
@@ -113,6 +88,30 @@ type Current struct {
 
 type WeatherInfo struct {
 	Description string `json:"description"`
+}
+
+// Функция для отправки сообщений пользователю
+func SendMsg(botUrl string, update Update, msg string) error {
+	// Запись того, что и куда отправить
+	botMessage := SendMessage{
+		ChatId: update.Message.Chat.ChatId,
+		Text:   msg,
+	}
+
+	// Запись сообщения в json
+	buf, err := json.Marshal(botMessage)
+	if err != nil {
+		fmt.Println("Marshal json error: ", err)
+		return err
+	}
+
+	// Отправка сообщения
+	_, err = http.Post(botUrl+"/sendMessage", "application/json", bytes.NewBuffer(buf))
+	if err != nil {
+		fmt.Println("SendMessage method error: ", err)
+		return err
+	}
+	return nil
 }
 
 func Sun(botUrl string, update Update) error {
@@ -348,4 +347,12 @@ func getCoordinates(update Update) (string, string) {
 	}
 
 	return coords[:c], coords[c+1:]
+}
+
+// Функция инициализации конфига (всех токенов)
+func InitConfig() error {
+	viper.AddConfigPath("configs")
+	viper.SetConfigName("config")
+
+	return viper.ReadInConfig()
 }
