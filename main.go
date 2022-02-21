@@ -63,7 +63,7 @@ func getUpdates(botUrl string, offset int) ([]mods.Update, error) {
 	return restResponse.Result, nil
 }
 
-//	https://core.telegram.org/bots/api#using-a-local-bot-api-server
+//	Функция обработки сообщений
 func respond(botUrl string, update mods.Update) error {
 	// msg - текст сообщения пользователя
 	msg := update.Message.Text
@@ -103,6 +103,7 @@ func respond(botUrl string, update mods.Update) error {
 		return nil
 	}
 
+	// Дефолтный респонс
 	mods.SendMsg(botUrl, update, "Я не понимаю, воспользуйтесь /help")
 	return nil
 }
