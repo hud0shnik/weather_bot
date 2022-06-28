@@ -88,6 +88,7 @@ type WeatherInfo struct {
 
 // Функция для отправки сообщений пользователю
 func SendMsg(botUrl string, update Update, msg string) error {
+
 	// Запись того, что и куда отправить
 	botMessage := SendMessage{
 		ChatId: update.Message.Chat.ChatId,
@@ -111,6 +112,7 @@ func SendMsg(botUrl string, update Update, msg string) error {
 }
 
 func Sun(botUrl string, update Update) error {
+
 	// Получение координат из json'a
 	lat, lon := getCoordinates(update)
 	if lat == "err" {
@@ -143,6 +145,7 @@ func Sun(botUrl string, update Update) error {
 }
 
 func SendHourlyWeather(botUrl string, update Update, hours int) error {
+
 	// Получение координат из json'a
 	lat, lon := getCoordinates(update)
 	if lat == "err" {
@@ -180,6 +183,7 @@ func SendHourlyWeather(botUrl string, update Update, hours int) error {
 }
 
 func SendDailyWeather(botUrl string, update Update, days int) error {
+
 	// Получение координат из json'a
 	lat, lon := getCoordinates(update)
 	if lat == "err" {
@@ -217,6 +221,7 @@ func SendDailyWeather(botUrl string, update Update, days int) error {
 }
 
 func SendThreeDaysWeather(botUrl string, update Update) {
+
 	// Если просто добавить в switch две команды,
 	// то при некорректных данных будут выводиться две ошибки
 	if SendCurrentWeather(botUrl, update) == nil {
@@ -271,6 +276,7 @@ func Help(botUrl string, update Update) {
 }
 
 func SetPlace(botUrl string, update Update) {
+
 	// Открытие json файла для чтения координат
 	file, err := os.Open("weather/coordinates.json")
 	if err != nil {
@@ -302,6 +308,7 @@ func SetPlace(botUrl string, update Update) {
 }
 
 func getCoordinates(update Update) (string, string) {
+
 	// Чтение данных из json файла с координатами
 	file, err := os.Open("weather/coordinates.json")
 	if err != nil {
