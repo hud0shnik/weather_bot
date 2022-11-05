@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -58,7 +57,7 @@ func main() {
 		}
 
 		// Вывод в консоль для тестов
-		fmt.Println(updates)
+		// fmt.Println(updates)
 	}
 }
 
