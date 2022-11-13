@@ -190,7 +190,7 @@ func SendHourlyWeather(botUrl string, update Update, hours int) error {
 	// Реквест к openweathermap
 
 	// Ссылка к апи погоды
-	url := "https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&lang=ru&exclude=minutely,hourly,daily,alerts&units=metric&appid=" + viper.GetString("weatherToken")
+	url := "https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&exclude=minutely,daily&units=metric&appid=" + viper.GetString("weatherToken")
 	// Генерация запроса
 	req, _ := http.NewRequest("GET", url, nil)
 	// Выполнение запроса
