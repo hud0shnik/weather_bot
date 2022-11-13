@@ -86,6 +86,20 @@ type WeatherInfo struct {
 	Description string `json:"description"`
 }
 
+// Структуры для работы с Open-Meteo API
+
+type openMeteoResponse struct {
+	Error  bool            `json:"error"`
+	Hourly openMeteoHourly `json:"hourly"`
+}
+
+type openMeteoHourly struct {
+	Temperature []float32 `json:"temperature_2m"`
+	Humidity    []int     `json:"relativehumidity_2m"`
+	Feels_like  []float32 `json:"apparent_temperature"`
+	Wind_speed  []float32 `json:"windspeed_10m"`
+}
+
 // Функция для отправки сообщений пользователю
 func SendMsg(botUrl string, update Update, msg string) error {
 
@@ -173,6 +187,8 @@ func SendHourlyWeather(botUrl string, update Update, hours int) error {
 		return errors.New("wrong coordinates")
 	}
 
+	// Реквест к openweathermap
+
 	// Ссылка к апи погоды
 	url := "https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&lang=ru&exclude=minutely,hourly,daily,alerts&units=metric&appid=" + viper.GetString("weatherToken")
 	// Генерация запроса
@@ -192,18 +208,43 @@ func SendHourlyWeather(botUrl string, update Update, hours int) error {
 	// Чтение ответа
 	body, _ := ioutil.ReadAll(res.Body)
 	// Структура для записи ответа
-	var rs = new(WeatherAPIResponse)
+	var rs1 = new(WeatherAPIResponse)
 	// Запись ответа
-	json.Unmarshal(body, &rs)
+	json.Unmarshal(body, &rs1)
 
-	// Вывод полученных данных
+	// Реквест к open-meteo
+
+	// Ссылка к апи погоды
+	url = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon + "&hourly=temperature_2m,relativehumidity_2m,apparent_temperature,windspeed_10m&windspeed_unit=ms"
+	// Генерация запроса
+	req, _ = http.NewRequest("GET", url, nil)
+	// Выполнение запроса
+	res, err = http.DefaultClient.Do(req)
+
+	// Проверка на ошибку
+	if err != nil {
+		// Вывод и возврат ошибки
+		fmt.Println("weather API error")
+		SendMsg(botUrl, update, "weather API error")
+		return err
+	}
+	defer res.Body.Close()
+
+	// Чтение ответа
+	body, _ = ioutil.ReadAll(res.Body)
+	// Структура для записи ответа
+	var rs2 = new(openMeteoResponse)
+	// Запись ответа
+	json.Unmarshal(body, &rs2)
+
+	// Вычисление средних значений и вывод полученных данных
 	for n := 1; n < hours+1; n++ {
-		SendMsg(botUrl, update, "Погода на "+time.Unix(rs.Hourly[n].Dt, 0).Format("15:04")+":\n \n"+
-			"На улице "+rs.Hourly[n].Weather[0].Description+
-			"\n🌡Температура: "+strconv.Itoa(int(rs.Hourly[n].Temp))+"°"+
-			"\n🤔Ощущается как: "+strconv.Itoa(int(rs.Hourly[n].Feels_like))+"°"+
-			"\n💨Ветер: "+strconv.Itoa(int(rs.Hourly[n].Wind_speed))+" м/с"+
-			"\n💧Влажность воздуха: "+strconv.Itoa(rs.Hourly[n].Humidity)+"%")
+		SendMsg(botUrl, update, "Погода на "+time.Unix(rs1.Hourly[n].Dt, 0).Format("15:04")+":\n \n"+
+			"На улице "+rs1.Hourly[n].Weather[0].Description+
+			"\n🌡Температура: "+strconv.Itoa(int((rs1.Hourly[n].Temp+rs2.Hourly.Temperature[n])/2))+"°"+
+			"\n🤔Ощущается как: "+strconv.Itoa(int((rs1.Hourly[n].Feels_like+rs2.Hourly.Feels_like[n])/2))+"°"+
+			"\n💨Ветер: "+strconv.Itoa(int((rs1.Hourly[n].Wind_speed+rs2.Hourly.Wind_speed[n])/2))+" м/с"+
+			"\n💧Влажность воздуха: "+strconv.Itoa((rs1.Hourly[n].Humidity+rs2.Hourly.Humidity[n])/2)+"%")
 	}
 
 	return nil
