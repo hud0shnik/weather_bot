@@ -290,11 +290,13 @@ func SendDailyWeather(botUrl string, update Update, days int) error {
 	// Вывод полученных данных
 	for n := 1; n < days+1; n++ {
 		SendMsg(botUrl, update, "Погода на "+time.Unix(rs.Daily[n].Dt, 0).Format("02/01/2006")+":\n \n"+
-			generateStatus(rs.Daily[n].Weather[0].Description, rs.Daily[n].Feels_like.Morning, rs.Daily[n].Wind_speed, rs.Daily[n].Humidity)+
+			generateStatus(rs.Daily[n].Weather[0].Description, rs.Daily[n].Feels_like.Morning, rs.Daily[n].Wind_speed, rs.Daily[n].Humidity)+"\n\n"+
+			"----------------------------------------------"+
 			"\n🌡Температура: "+strconv.Itoa(int(rs.Daily[n].Temp.Morning))+"°"+" -> "+strconv.Itoa(int(rs.Daily[n].Temp.Evening))+"°"+
 			"\n🤔Ощущается как: "+strconv.Itoa(int(rs.Daily[n].Feels_like.Morning))+"°"+" -> "+strconv.Itoa(int(rs.Daily[n].Feels_like.Evening))+"°"+
 			"\n💨Ветер: "+strconv.Itoa(int(rs.Daily[n].Wind_speed))+" м/с"+
-			"\n💧Влажность воздуха: "+strconv.Itoa(rs.Daily[n].Humidity)+"%")
+			"\n💧Влажность воздуха: "+strconv.Itoa(rs.Daily[n].Humidity)+"%"+
+			"\n----------------------------------------------")
 	}
 
 	return nil
