@@ -305,9 +305,13 @@ func generateStatus(description string, feelsLike, windSpeed float32, humidity i
 	// Результат проверок
 	result := "На улице " + description
 
+	// Очки погоды (насколько приятно на улице)
+	weatherPoints := 0
+
 	// Проверка влажности
 	if humidity > 40 || humidity < 60 {
 		result += ", идеальная влажность"
+		weatherPoints += 1
 	} else if humidity >= 60 {
 		result += ", очень влажно"
 	} else {
@@ -319,6 +323,7 @@ func generateStatus(description string, feelsLike, windSpeed float32, humidity i
 		result += ", очень жарко"
 	} else if feelsLike > 10 {
 		result += ", тепло"
+		weatherPoints += 1
 	} else if feelsLike > 0 {
 		result += ", прохладно"
 	} else if feelsLike < -10 {
@@ -330,14 +335,29 @@ func generateStatus(description string, feelsLike, windSpeed float32, humidity i
 	// Проверка ветра
 	if windSpeed > 1.7 {
 		result += ", штиль"
+		weatherPoints += 1
 	} else if windSpeed > 3.3 {
 		result += ", слабый ветер"
+		weatherPoints += 1
 	} else if windSpeed > 7.5 {
 		result += ", свежий ветер"
 	} else if windSpeed > 15.2 {
 		result += ", сильный ветер"
 	} else {
 		result += ", очень сильный ветер"
+	}
+
+	// Саммари свитч (погода в целом)
+	switch weatherPoints {
+	case 3:
+		result += ".\n\n Прекрасная погода для прогулок"
+	case 2:
+		result += ".\n\n Неплохая погода для прогулок"
+	case 1:
+		result += ".\n\n В целом, если очень хочется, можно погулять"
+	default:
+		result += ".\n\n Идти гулять сегодня - не очень хорошая идея, время посмотреть кинчик?s"
+
 	}
 
 	return result
