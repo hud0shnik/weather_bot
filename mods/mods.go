@@ -289,7 +289,7 @@ func SendDailyWeather(botUrl string, update Update, days int) error {
 	// Вывод полученных данных
 	for n := 1; n < days+1; n++ {
 		SendMsg(botUrl, update, "Погода на "+time.Unix(rs.Daily[n].Dt, 0).Format("02/01/2006")+":\n \n"+
-			"На улице "+rs.Daily[n].Weather[0].Description+
+			generateStatus(rs.Daily[n].Weather[0].Description, rs.Daily[n].Feels_like.Morning, rs.Daily[n].Wind_speed, rs.Daily[n].Humidity)+
 			"\n🌡Температура: "+strconv.Itoa(int(rs.Daily[n].Temp.Morning))+"°"+" -> "+strconv.Itoa(int(rs.Daily[n].Temp.Evening))+"°"+
 			"\n🤔Ощущается как: "+strconv.Itoa(int(rs.Daily[n].Feels_like.Morning))+"°"+" -> "+strconv.Itoa(int(rs.Daily[n].Feels_like.Evening))+"°"+
 			"\n💨Ветер: "+strconv.Itoa(int(rs.Daily[n].Wind_speed))+" м/с"+
@@ -297,6 +297,35 @@ func SendDailyWeather(botUrl string, update Update, days int) error {
 	}
 
 	return nil
+}
+
+// Функция генерации статуса погоды
+func generateStatus(description string, feelsLike, windSpeed float32, humidity int) string {
+	var result string
+
+	result += "На улице " + description
+
+	if humidity > 40 || humidity < 60 {
+		result += ", идеальная влажность"
+	} else if humidity >= 60 {
+		result += ", очень влажно"
+	} else {
+		result += ", очень сухо"
+	}
+
+	if windSpeed > 1.7 {
+		result += ", штиль"
+	} else if windSpeed > 3.3 {
+		result += ", слабый ветер"
+	} else if windSpeed > 7.5 {
+		result += ", свежий ветер"
+	} else if windSpeed > 15.2 {
+		result += ", сильный ветер"
+	} else {
+		result += ", очень сильный ветер"
+	}
+
+	return result
 }
 
 // Функция отправки конкретного прогноза и на два дня вперёд
