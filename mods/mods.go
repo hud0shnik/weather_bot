@@ -313,6 +313,18 @@ func generateStatus(description string, feelsLike, windSpeed float32, humidity i
 		result += ", очень сухо"
 	}
 
+	if feelsLike > 25 {
+		result += ", очень жарко"
+	} else if feelsLike > 10 {
+		result += ", тепло"
+	} else if feelsLike > 0 {
+		result += ", прохладно"
+	} else if feelsLike < -10 {
+		result += ", холодно"
+	} else {
+		result += ", очень холодно"
+	}
+
 	if windSpeed > 1.7 {
 		result += ", штиль"
 	} else if windSpeed > 3.3 {
