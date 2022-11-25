@@ -301,10 +301,11 @@ func SendDailyWeather(botUrl string, update Update, days int) error {
 
 // Функция генерации статуса погоды
 func generateStatus(description string, feelsLike, windSpeed float32, humidity int) string {
-	var result string
 
-	result += "На улице " + description
+	// Результат проверок
+	result := "На улице " + description
 
+	// Проверка влажности
 	if humidity > 40 || humidity < 60 {
 		result += ", идеальная влажность"
 	} else if humidity >= 60 {
@@ -313,6 +314,7 @@ func generateStatus(description string, feelsLike, windSpeed float32, humidity i
 		result += ", очень сухо"
 	}
 
+	// Проверка температуры
 	if feelsLike > 25 {
 		result += ", очень жарко"
 	} else if feelsLike > 10 {
@@ -325,6 +327,7 @@ func generateStatus(description string, feelsLike, windSpeed float32, humidity i
 		result += ", очень холодно"
 	}
 
+	// Проверка ветра
 	if windSpeed > 1.7 {
 		result += ", штиль"
 	} else if windSpeed > 3.3 {
