@@ -176,132 +176,6 @@ func Sun(botUrl string, update Update) error {
 	return nil
 }
 
-// Функция отправки почасовых карточек
-func SendHourlyWeather(botUrl string, update Update, hours int) error {
-
-	// Получение координат из json'a
-	lat, lon := getCoordinates(update)
-
-	// Проверка на ошибку
-	if lat == "err" {
-		SendMsg(botUrl, update, "Пожалуйста обновите свои координаты командой /set")
-		return errors.New("wrong coordinates")
-	}
-
-	// Реквест к openweathermap
-
-	// Ссылка к апи погоды
-	url := "https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&lang=ru&exclude=minutely,daily&units=metric&appid=" + viper.GetString("weatherToken")
-	// Генерация запроса
-	req, _ := http.NewRequest("GET", url, nil)
-	// Выполнение запроса
-	res, err := http.DefaultClient.Do(req)
-
-	// Проверка на ошибку
-	if err != nil {
-		// Вывод и возврат ошибки
-		fmt.Println("weather API error")
-		SendMsg(botUrl, update, "weather API error")
-		return err
-	}
-	defer res.Body.Close()
-
-	// Чтение ответа
-	body, _ := ioutil.ReadAll(res.Body)
-	// Структура для записи ответа
-	var rs1 = new(WeatherAPIResponse)
-	// Запись ответа
-	json.Unmarshal(body, &rs1)
-
-	// Реквест к open-meteo
-
-	// Ссылка к апи погоды
-	url = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon + "&hourly=temperature_2m,relativehumidity_2m,apparent_temperature,windspeed_10m&windspeed_unit=ms"
-	// Генерация запроса
-	req, _ = http.NewRequest("GET", url, nil)
-	// Выполнение запроса
-	res, err = http.DefaultClient.Do(req)
-
-	// Проверка на ошибку
-	if err != nil {
-		// Вывод и возврат ошибки
-		fmt.Println("weather API error")
-		SendMsg(botUrl, update, "weather API error")
-		return err
-	}
-	defer res.Body.Close()
-
-	// Чтение ответа
-	body, _ = ioutil.ReadAll(res.Body)
-	// Структура для записи ответа
-	var rs2 = new(openMeteoResponse)
-	// Запись ответа
-	json.Unmarshal(body, &rs2)
-
-	// Вычисление средних значений и вывод полученных данных
-	for n := 1; n < hours+1; n++ {
-		SendMsg(botUrl, update, "Погода на "+time.Unix(rs1.Hourly[n].Dt, 0).Format("15:04")+":\n \n"+
-			"На улице "+rs1.Hourly[n].Weather[0].Description+
-			"\n🌡Температура: "+strconv.Itoa(int((rs1.Hourly[n].Temp+rs2.Hourly.Temperature[n])/2))+"°"+
-			"\n🤔Ощущается как: "+strconv.Itoa(int((rs1.Hourly[n].Feels_like+rs2.Hourly.Feels_like[n])/2))+"°"+
-			"\n💨Ветер: "+strconv.Itoa(int((rs1.Hourly[n].Wind_speed+rs2.Hourly.Wind_speed[n])/2))+" м/с"+
-			"\n💧Влажность воздуха: "+strconv.Itoa((rs1.Hourly[n].Humidity+rs2.Hourly.Humidity[n])/2)+"%")
-	}
-
-	return nil
-}
-
-// Функция отправки дневных карточек
-func SendDailyWeather(botUrl string, update Update, days int) error {
-
-	// Получение координат из json'a
-	lat, lon := getCoordinates(update)
-
-	// Проверка на ошибку
-	if lat == "err" {
-		// Вывод и возврат ошибки
-		SendMsg(botUrl, update, "Пожалуйста обновите свои координаты командой /set")
-		return errors.New("wrong coordinates")
-	}
-
-	// Ссылка к апи погоды
-	url := "https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&lang=ru&exclude=minutely,current,minutely,alerts&units=metric&appid=" + viper.GetString("weatherToken")
-	// Генерация запроса
-	req, _ := http.NewRequest("GET", url, nil)
-	// Выполнение запроса
-	res, err := http.DefaultClient.Do(req)
-
-	// Проверка на ошибку
-	if err != nil {
-		// Вывод и возврат ошибки
-		fmt.Println("weather API error")
-		SendMsg(botUrl, update, "weather API error")
-		return err
-	}
-	defer res.Body.Close()
-
-	// Чтение ответа
-	body, _ := ioutil.ReadAll(res.Body)
-	// Структура для записи ответа
-	var rs = new(WeatherAPIResponse)
-	// Запись ответа
-	json.Unmarshal(body, &rs)
-
-	// Вывод полученных данных
-	for n := 1; n < days+1; n++ {
-		SendMsg(botUrl, update, "Погода на "+time.Unix(rs.Daily[n].Dt, 0).Format("02/01/2006")+":\n \n"+
-			generateStatus(rs.Daily[n].Weather[0].Description, rs.Daily[n].Feels_like.Morning, rs.Daily[n].Wind_speed, rs.Daily[n].Humidity)+"\n\n"+
-			"----------------------------------------------"+
-			"\n🌡Температура: "+strconv.Itoa(int(rs.Daily[n].Temp.Morning))+"°"+" -> "+strconv.Itoa(int(rs.Daily[n].Temp.Evening))+"°"+
-			"\n🤔Ощущается как: "+strconv.Itoa(int(rs.Daily[n].Feels_like.Morning))+"°"+" -> "+strconv.Itoa(int(rs.Daily[n].Feels_like.Evening))+"°"+
-			"\n💨Ветер: "+strconv.Itoa(int(rs.Daily[n].Wind_speed))+" м/с"+
-			"\n💧Влажность воздуха: "+strconv.Itoa(rs.Daily[n].Humidity)+"%"+
-			"\n----------------------------------------------")
-	}
-
-	return nil
-}
-
 // Функция генерации статуса погоды
 func generateStatus(description string, feelsLike, windSpeed float32, humidity int) string {
 
@@ -371,19 +245,55 @@ func generateStatus(description string, feelsLike, windSpeed float32, humidity i
 	return result
 }
 
-// Функция отправки конкретного прогноза и на два дня вперёд
-func SendThreeDaysWeather(botUrl string, update Update) {
+// Функция отправки дневных карточек
+func SendDailyWeather(botUrl string, update Update, days int) error {
 
-	// Если просто добавить в switch две команды,
-	// то при некорректных данных будут выводиться две ошибки
-	// Поэтому существует эта функция
+	// Получение координат из json'a
+	lat, lon := getCoordinates(update)
 
-	// Отправка текущего прогноза
-	if SendCurrentWeather(botUrl, update) == nil {
-
-		// Если всё хорошо, отправка двух дневных карточек
-		SendDailyWeather(botUrl, update, 2)
+	// Проверка на ошибку
+	if lat == "err" {
+		// Вывод и возврат ошибки
+		SendMsg(botUrl, update, "Пожалуйста обновите свои координаты командой /set")
+		return errors.New("wrong coordinates")
 	}
+
+	// Ссылка к апи погоды
+	url := "https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&lang=ru&exclude=minutely,current,minutely,alerts&units=metric&appid=" + viper.GetString("weatherToken")
+	// Генерация запроса
+	req, _ := http.NewRequest("GET", url, nil)
+	// Выполнение запроса
+	res, err := http.DefaultClient.Do(req)
+
+	// Проверка на ошибку
+	if err != nil {
+		// Вывод и возврат ошибки
+		fmt.Println("weather API error")
+		SendMsg(botUrl, update, "weather API error")
+		return err
+	}
+	defer res.Body.Close()
+
+	// Чтение ответа
+	body, _ := ioutil.ReadAll(res.Body)
+	// Структура для записи ответа
+	var rs = new(WeatherAPIResponse)
+	// Запись ответа
+	json.Unmarshal(body, &rs)
+
+	// Вывод полученных данных
+	for n := 1; n < days+1; n++ {
+		SendMsg(botUrl, update, "Погода на "+time.Unix(rs.Daily[n].Dt, 0).Format("02/01/2006")+":\n \n"+
+			generateStatus(rs.Daily[n].Weather[0].Description, rs.Daily[n].Feels_like.Morning, rs.Daily[n].Wind_speed, rs.Daily[n].Humidity)+"\n"+
+			"\n----------------------------------------------"+
+			"\n🌡Температура: "+strconv.Itoa(int(rs.Daily[n].Temp.Morning))+"°"+" -> "+strconv.Itoa(int(rs.Daily[n].Temp.Evening))+"°"+
+			"\n🤔Ощущается как: "+strconv.Itoa(int(rs.Daily[n].Feels_like.Morning))+"°"+" -> "+strconv.Itoa(int(rs.Daily[n].Feels_like.Evening))+"°"+
+			"\n💨Ветер: "+strconv.Itoa(int(rs.Daily[n].Wind_speed))+" м/с"+
+			"\n💧Влажность воздуха: "+strconv.Itoa(rs.Daily[n].Humidity)+"%"+
+			"\n----------------------------------------------")
+	}
+
+	return nil
 }
 
 // Функция отправки погоды на данный момент
@@ -423,13 +333,30 @@ func SendCurrentWeather(botUrl string, update Update) error {
 
 	// Вывод полученных данных
 	SendMsg(botUrl, update, "Погода на сегодня"+":\n \n"+
-		"На улице "+rs.Current.Weather[0].Description+
+		generateStatus(rs.Current.Weather[0].Description, rs.Current.Feels_like, rs.Current.Wind_speed, rs.Current.Humidity)+"\n"+
+		"\n----------------------------------------------"+
 		"\n🌡Температура: "+strconv.Itoa(int(rs.Current.Temp))+
 		"\n🤔Ощущается как: "+strconv.Itoa(int(rs.Current.Feels_like))+"°"+
 		"\n💨Ветер: "+strconv.Itoa(int(rs.Current.Wind_speed))+" м/с"+
-		"\n💧Влажность воздуха: "+strconv.Itoa(rs.Current.Humidity)+"%")
+		"\n💧Влажность воздуха: "+strconv.Itoa(rs.Current.Humidity)+"%"+
+		"\n----------------------------------------------")
 
 	return nil
+}
+
+// Функция отправки конкретного прогноза и на два дня вперёд
+func SendThreeDaysWeather(botUrl string, update Update) {
+
+	// Если просто добавить в switch две команды,
+	// то при некорректных данных будут выводиться две ошибки
+	// Поэтому существует эта функция
+
+	// Отправка текущего прогноза
+	if SendCurrentWeather(botUrl, update) == nil {
+
+		// Если всё хорошо, отправка двух дневных карточек
+		SendDailyWeather(botUrl, update, 2)
+	}
 }
 
 // Функция вывода списка команд
@@ -438,8 +365,6 @@ func Help(botUrl string, update Update) {
 		"/set - установить координаты\n"+
 		"/weather - погода на сегодня и два следующих дня\n"+
 		"/current - погода прямо сейчас\n"+
-		"/hourly - погода на следующие 6 часов\n"+
-		"/hourly24 - погода на следующие 24 часа\n"+
 		"/week - погода на следующие 7 дней\n"+
 		"/sun - время восхода и заката на сегодня")
 }
