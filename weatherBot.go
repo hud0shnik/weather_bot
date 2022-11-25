@@ -105,7 +105,7 @@ func getUpdates(botUrl string, offset int) ([]mods.Update, error) {
 	return restResponse.Result, nil
 }
 
-//	Функция обработки сообщений
+// Функция обработки сообщений
 func respond(botUrl string, update mods.Update) error {
 
 	// msg - текст сообщения пользователя
@@ -118,18 +118,6 @@ func respond(botUrl string, update mods.Update) error {
 	case "/week":
 		// Отправка семи карточек (по карточке на день)
 		mods.SendDailyWeather(botUrl, update, 7)
-		return nil
-
-	// Если сообщение = /hourly
-	case "/hourly":
-		// Отправка шести карточек (по карточке на час)
-		mods.SendHourlyWeather(botUrl, update, 6)
-		return nil
-
-	// Если сообщение = /hourly24
-	case "/hourly24":
-		// Отправка 24 карточек (по карточке на час)
-		mods.SendHourlyWeather(botUrl, update, 24)
 		return nil
 
 	// Если сообщение = /weather
