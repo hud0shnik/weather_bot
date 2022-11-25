@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/spf13/viper"
@@ -347,16 +348,21 @@ func generateStatus(description string, feelsLike, windSpeed float32, humidity i
 		result += ", очень сильный ветер"
 	}
 
-	// Саммари свитч (погода в целом)
+	// Проверка на дождь и грозу
+	if strings.Contains(description, "дождь") || strings.Contains(description, "гроза") {
+		weatherPoints -= 2
+	}
+
+	// Вычисление оценки погоды
 	switch weatherPoints {
 	case 3:
-		result += ".\n\n Прекрасная погода для прогулок"
+		result += ".\n\n Прекрасная погода для прогулок!"
 	case 2:
 		result += ".\n\n Неплохая погода для прогулок"
 	case 1:
 		result += ".\n\n В целом, если очень хочется, можно погулять"
 	default:
-		result += ".\n\n Идти гулять сегодня - не очень хорошая идея, время посмотреть кинчик?s"
+		result += ".\n\n Идти гулять сегодня - не очень хорошая идея, время посмотреть кинчик?"
 
 	}
 
