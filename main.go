@@ -40,7 +40,7 @@ type sticker struct {
 func main() {
 
 	// Инициализация конфига (токенов)
-	err := mods.InitConfig()
+	err := initConfig()
 	if err != nil {
 		log.Fatalf("initConfig error: %s", err)
 		return
@@ -130,4 +130,17 @@ func respond(botUrl string, update update) {
 
 	}
 
+}
+
+// Функция инициализации конфига (всех токенов)
+func initConfig() error {
+
+	// Где конфиг
+	viper.AddConfigPath("configs")
+
+	// Как называется файл
+	viper.SetConfigName("config")
+
+	// Вывод статуса считывания (всё хорошо - вернёт nil)
+	return viper.ReadInConfig()
 }

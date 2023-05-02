@@ -14,50 +14,50 @@ import (
 )
 
 // Структуры для работы с Openweather API
-type WeatherAPIResponse struct {
-	Current Current `json:"current"`
-	Daily   []Day   `json:"daily"`
-	Hourly  []Hour  `json:"hourly"`
+type weatherAPIResponse struct {
+	Current current `json:"current"`
+	Daily   []day   `json:"daily"`
+	Hourly  []hour  `json:"hourly"`
 }
 
-type Current struct {
+type current struct {
 	Sunrise    int           `json:"sunrise"`
 	Sunset     int           `json:"sunset"`
 	Temp       float32       `json:"temp"`
 	Feels_like float32       `json:"feels_like"`
 	Humidity   int           `json:"humidity"`
 	Wind_speed float32       `json:"wind_speed"`
-	Weather    []WeatherInfo `json:"weather"`
+	Weather    []weatherInfo `json:"weather"`
 }
 
-type Day struct {
+type day struct {
 	Dt         int64         `json:"dt"`
 	Sunrise    int           `json:"sunrise"`
 	Sunset     int           `json:"sunset"`
-	Temp       Temp          `json:"temp"`
-	Feels_like Temp          `json:"feels_like"`
+	Temp       temp          `json:"temp"`
+	Feels_like temp          `json:"feels_like"`
 	Wind_speed float32       `json:"wind_speed"`
-	Weather    []WeatherInfo `json:"weather"`
+	Weather    []weatherInfo `json:"weather"`
 	Humidity   int           `json:"humidity"`
 }
 
-type Hour struct {
+type hour struct {
 	Dt         int64         `json:"dt"`
 	Temp       float32       `json:"temp"`
 	Feels_like float32       `json:"feels_like"`
 	Humidity   int           `json:"humidity"`
 	Wind_speed float32       `json:"wind_speed"`
-	Weather    []WeatherInfo `json:"weather"`
+	Weather    []weatherInfo `json:"weather"`
 }
 
-type Temp struct {
+type temp struct {
 	Day     float32 `json:"day"`
 	Night   float32 `json:"night"`
 	Evening float32 `json:"eve"`
 	Morning float32 `json:"morn"`
 }
 
-type WeatherInfo struct {
+type weatherInfo struct {
 	Description string `json:"description"`
 }
 
@@ -106,7 +106,7 @@ func Sun(botUrl string, chatId int) error {
 	// Чтение ответа
 	body, _ := ioutil.ReadAll(res.Body)
 	// Структура для записи ответа
-	var rs = new(WeatherAPIResponse)
+	var rs = new(weatherAPIResponse)
 	// Запись ответа
 	json.Unmarshal(body, &rs)
 
@@ -150,7 +150,7 @@ func SendDailyWeather(botUrl string, chatId int, days int) error {
 	// Чтение ответа
 	body, _ := ioutil.ReadAll(res.Body)
 	// Структура для записи ответа
-	var rs = new(WeatherAPIResponse)
+	var rs = new(weatherAPIResponse)
 	// Запись ответа
 	json.Unmarshal(body, &rs)
 
@@ -199,7 +199,7 @@ func SendCurrentWeather(botUrl string, chatId int) error {
 	// Чтение ответа
 	body, _ := ioutil.ReadAll(res.Body)
 	// Структура для записи ответа
-	var rs = new(WeatherAPIResponse)
+	var rs = new(weatherAPIResponse)
 	// Запись ответа
 	json.Unmarshal(body, &rs)
 
@@ -346,17 +346,4 @@ func getCoordinates(chatId int) (string, string) {
 
 	// Возврат координат
 	return coords[:c], coords[c+1:]
-}
-
-// Функция инициализации конфига (всех токенов)
-func InitConfig() error {
-
-	// Где конфиг
-	viper.AddConfigPath("configs")
-
-	// Как называется файл
-	viper.SetConfigName("config")
-
-	// Вывод статуса считывания (всё хорошо - вернёт nil)
-	return viper.ReadInConfig()
 }
