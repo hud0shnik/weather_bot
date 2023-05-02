@@ -6,16 +6,17 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/spf13/viper"
 )
 
 // Структуры для работы с Telegram API
+
 type TelegramResponse struct {
 	Result []Update `json:"result"`
 }
@@ -101,47 +102,37 @@ type openMeteoHourly struct {
 	Wind_speed  []float32 `json:"windspeed_10m"`
 }
 
-// Функция для отправки сообщений пользователю
-func SendMsg(botUrl string, update Update, msg string) error {
+// Функция отправки сообщения
+func SendMsg(botUrl string, chatId int, msg string) error {
 
-	// Запись того, что и куда отправить
-	botMessage := SendMessage{
-		ChatId: update.Message.Chat.ChatId,
+	// Формирование сообщения
+	buf, err := json.Marshal(SendMessage{
+		ChatId: chatId,
 		Text:   msg,
-	}
-
-	// Запись сообщения в json
-	buf, err := json.Marshal(botMessage)
-
-	// Проверка на ошибку
+	})
 	if err != nil {
-		// Вывод и возврат ошибки
-		fmt.Println("Marshal json error: ", err)
+		log.Printf("json.Marshal error: %s", err)
 		return err
 	}
 
 	// Отправка сообщения
 	_, err = http.Post(botUrl+"/sendMessage", "application/json", bytes.NewBuffer(buf))
-
-	// Проверка на ошибку
 	if err != nil {
-		// Вывод и возврат ошибки
-		fmt.Println("SendMessage method error: ", err)
+		log.Printf("sendMessage error: %s", err)
 		return err
 	}
-
 	return nil
 }
 
 // Функция вывода информации о рассвете и закате
-func Sun(botUrl string, update Update) error {
+func Sun(botUrl string, chatId int) error {
 
 	// Получение координат из json'a
-	lat, lon := getCoordinates(update)
+	lat, lon := getCoordinates(chatId)
 
 	// Проверка на ошибку
 	if lat == "err" {
-		SendMsg(botUrl, update, "Пожалуйста обновите свои координаты командой /set")
+		SendMsg(botUrl, chatId, "Пожалуйста обновите свои координаты командой /set")
 		return errors.New("wrong coordinates")
 	}
 
@@ -156,7 +147,7 @@ func Sun(botUrl string, update Update) error {
 	if err != nil {
 		// Вывод и возврат ошибки
 		fmt.Println("weather API error")
-		SendMsg(botUrl, update, "weather API error")
+		SendMsg(botUrl, chatId, "weather API error")
 		return err
 	}
 	defer res.Body.Close()
@@ -169,92 +160,23 @@ func Sun(botUrl string, update Update) error {
 	json.Unmarshal(body, &rs)
 
 	// Вывод полученных данных пользователю
-	SendMsg(botUrl, update, "🌄 Восход и закат на сегодня 🌄\n \n"+
+	SendMsg(botUrl, chatId, "🌄 Восход и закат на сегодня 🌄\n \n"+
 		"🌅 Восход наступит в "+time.Unix(int64(rs.Current.Sunrise), 0).Add(3*time.Hour).Format("15:04:05")+
 		"\n🌇 А закат в "+time.Unix(int64(rs.Current.Sunset), 0).Add(3*time.Hour).Format("15:04:05"))
 
 	return nil
 }
 
-// Функция генерации статуса погоды
-func generateStatus(description string, feelsLike, windSpeed float32, humidity int) string {
-
-	// Результат проверок
-	result := "На улице " + description
-
-	// Очки погоды (насколько приятно на улице)
-	weatherPoints := 0
-
-	// Проверка влажности
-	if humidity > 40 || humidity < 60 {
-		result += ", идеальная влажность"
-		weatherPoints += 1
-	} else if humidity >= 60 {
-		result += ", очень влажно"
-	} else {
-		result += ", очень сухо"
-	}
-
-	// Проверка температуры
-	if feelsLike > 25 {
-		result += ", очень жарко"
-	} else if feelsLike > 10 {
-		result += ", тепло"
-		weatherPoints += 1
-	} else if feelsLike > 0 {
-		result += ", прохладно"
-	} else if feelsLike < -10 {
-		result += ", холодно"
-	} else {
-		result += ", очень холодно"
-	}
-
-	// Проверка ветра
-	if windSpeed > 1.7 {
-		result += ", штиль"
-		weatherPoints += 1
-	} else if windSpeed > 3.3 {
-		result += ", слабый ветер"
-		weatherPoints += 1
-	} else if windSpeed > 7.5 {
-		result += ", свежий ветер"
-	} else if windSpeed > 15.2 {
-		result += ", сильный ветер"
-	} else {
-		result += ", очень сильный ветер"
-	}
-
-	// Проверка на дождь и грозу
-	if strings.Contains(description, "дождь") || strings.Contains(description, "гроза") {
-		weatherPoints -= 2
-	}
-
-	// Вычисление оценки погоды
-	switch weatherPoints {
-	case 3:
-		result += ".\n\n Прекрасная погода для прогулок!"
-	case 2:
-		result += ".\n\n Неплохая погода для прогулок"
-	case 1:
-		result += ".\n\n В целом, если очень хочется, можно погулять"
-	default:
-		result += ".\n\n Идти гулять сегодня - не очень хорошая идея, время посмотреть кинчик?"
-
-	}
-
-	return result
-}
-
 // Функция отправки дневных карточек
-func SendDailyWeather(botUrl string, update Update, days int) error {
+func SendDailyWeather(botUrl string, chatId int, days int) error {
 
 	// Получение координат из json'a
-	lat, lon := getCoordinates(update)
+	lat, lon := getCoordinates(chatId)
 
 	// Проверка на ошибку
 	if lat == "err" {
 		// Вывод и возврат ошибки
-		SendMsg(botUrl, update, "Пожалуйста обновите свои координаты командой /set")
+		SendMsg(botUrl, chatId, "Пожалуйста обновите свои координаты командой /set")
 		return errors.New("wrong coordinates")
 	}
 
@@ -269,7 +191,7 @@ func SendDailyWeather(botUrl string, update Update, days int) error {
 	if err != nil {
 		// Вывод и возврат ошибки
 		fmt.Println("weather API error")
-		SendMsg(botUrl, update, "weather API error")
+		SendMsg(botUrl, chatId, "weather API error")
 		return err
 	}
 	defer res.Body.Close()
@@ -283,8 +205,7 @@ func SendDailyWeather(botUrl string, update Update, days int) error {
 
 	// Вывод полученных данных
 	for n := 1; n < days+1; n++ {
-		SendMsg(botUrl, update, "Погода на "+time.Unix(rs.Daily[n].Dt, 0).Format("02/01/2006")+":\n \n"+
-			generateStatus(rs.Daily[n].Weather[0].Description, rs.Daily[n].Feels_like.Morning, rs.Daily[n].Wind_speed, rs.Daily[n].Humidity)+"\n"+
+		SendMsg(botUrl, chatId, "Погода на "+time.Unix(rs.Daily[n].Dt, 0).Format("02/01/2006")+":\n \n"+
 			"\n----------------------------------------------"+
 			"\n🌡Температура: "+strconv.Itoa(int(rs.Daily[n].Temp.Morning))+"°"+" -> "+strconv.Itoa(int(rs.Daily[n].Temp.Evening))+"°"+
 			"\n🤔Ощущается как: "+strconv.Itoa(int(rs.Daily[n].Feels_like.Morning))+"°"+" -> "+strconv.Itoa(int(rs.Daily[n].Feels_like.Evening))+"°"+
@@ -297,14 +218,14 @@ func SendDailyWeather(botUrl string, update Update, days int) error {
 }
 
 // Функция отправки погоды на данный момент
-func SendCurrentWeather(botUrl string, update Update) error {
+func SendCurrentWeather(botUrl string, chatId int) error {
 
 	// Получение координат из json'a
-	lat, lon := getCoordinates(update)
+	lat, lon := getCoordinates(chatId)
 
 	// Проверка на ошибку
 	if lat == "err" {
-		SendMsg(botUrl, update, "Пожалуйста обновите свои координаты командой /set")
+		SendMsg(botUrl, chatId, "Пожалуйста обновите свои координаты командой /set")
 		return errors.New("wrong coordinates")
 	}
 
@@ -319,7 +240,7 @@ func SendCurrentWeather(botUrl string, update Update) error {
 	if err != nil {
 		// Вывод и возврат ошибки
 		fmt.Println("weather API error")
-		SendMsg(botUrl, update, "weather API error")
+		SendMsg(botUrl, chatId, "weather API error")
 		return err
 	}
 	defer res.Body.Close()
@@ -332,8 +253,7 @@ func SendCurrentWeather(botUrl string, update Update) error {
 	json.Unmarshal(body, &rs)
 
 	// Вывод полученных данных
-	SendMsg(botUrl, update, "Погода на сегодня"+":\n \n"+
-		generateStatus(rs.Current.Weather[0].Description, rs.Current.Feels_like, rs.Current.Wind_speed, rs.Current.Humidity)+"\n"+
+	SendMsg(botUrl, chatId, "Погода на сегодня"+":\n \n"+
 		"\n----------------------------------------------"+
 		"\n🌡Температура: "+strconv.Itoa(int(rs.Current.Temp))+
 		"\n🤔Ощущается как: "+strconv.Itoa(int(rs.Current.Feels_like))+"°"+
@@ -345,23 +265,23 @@ func SendCurrentWeather(botUrl string, update Update) error {
 }
 
 // Функция отправки конкретного прогноза и на два дня вперёд
-func SendThreeDaysWeather(botUrl string, update Update) {
+func SendThreeDaysWeather(botUrl string, chatId int) {
 
 	// Если просто добавить в switch две команды,
 	// то при некорректных данных будут выводиться две ошибки
 	// Поэтому существует эта функция
 
 	// Отправка текущего прогноза
-	if SendCurrentWeather(botUrl, update) == nil {
+	if SendCurrentWeather(botUrl, chatId) == nil {
 
 		// Если всё хорошо, отправка двух дневных карточек
-		SendDailyWeather(botUrl, update, 2)
+		SendDailyWeather(botUrl, chatId, 2)
 	}
 }
 
 // Функция вывода списка команд
-func Help(botUrl string, update Update) {
-	SendMsg(botUrl, update, "Команды: \n"+
+func Help(botUrl string, chatId int) {
+	SendMsg(botUrl, chatId, "Команды: \n"+
 		"/set - установить координаты\n"+
 		"/weather - погода на сегодня и два следующих дня\n"+
 		"/current - погода прямо сейчас\n"+
@@ -370,7 +290,7 @@ func Help(botUrl string, update Update) {
 }
 
 // Функция установки координат
-func SetPlace(botUrl string, update Update) {
+func SetPlace(botUrl string, chatId int, text string) {
 
 	// Открытие json файла для чтения координат
 	file, err := os.Open("weather/coordinates.json")
@@ -391,7 +311,7 @@ func SetPlace(botUrl string, update Update) {
 	json.Unmarshal(body, &m)
 
 	// Добавление или обновление введенной информации в map
-	m[strconv.Itoa(update.Message.Chat.ChatId)] = update.Message.Text[5:]
+	m[strconv.Itoa(chatId)] = text
 
 	// Запись обновленных данных в json
 	fileU, err := os.Create("weather/coordinates.json")
@@ -410,11 +330,11 @@ func SetPlace(botUrl string, update Update) {
 	fileU.Write(result)
 
 	//Уведомление об успешной записи данных
-	SendMsg(botUrl, update, "Записал координаты!")
+	SendMsg(botUrl, chatId, "Записал координаты!")
 }
 
 // Функция получения координат
-func getCoordinates(update Update) (string, string) {
+func getCoordinates(chatId int) (string, string) {
 
 	// Чтение данных из json файла с координатами
 	file, err := os.Open("weather/coordinates.json")
@@ -436,7 +356,7 @@ func getCoordinates(update Update) (string, string) {
 	json.Unmarshal(body, &m)
 
 	// Получение координат, которые пользователь ввел ранее
-	coords, c := m[strconv.Itoa(update.Message.Chat.ChatId)], 0
+	coords, c := m[strconv.Itoa(chatId)], 0
 
 	// с - переменная, отвечающая за расположение пробела
 	for ; c < len(coords); c++ {
