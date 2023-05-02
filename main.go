@@ -110,7 +110,8 @@ func respond(botUrl string, update update) {
 		case "/week":
 			mods.SendDailyWeather(botUrl, update.Message.Chat.ChatId, 7)
 		case "/weather":
-			mods.SendThreeDaysWeather(botUrl, update.Message.Chat.ChatId)
+			mods.SendCurrentWeather(botUrl, update.Message.Chat.ChatId)
+			mods.SendDailyWeather(botUrl, update.Message.Chat.ChatId, 2)
 		case "/current":
 			mods.SendCurrentWeather(botUrl, update.Message.Chat.ChatId)
 		case "/sun":

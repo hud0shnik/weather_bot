@@ -2,13 +2,12 @@ package mods
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/spf13/viper"
@@ -80,8 +79,8 @@ type openMeteoHourly struct {
 func SendSunInfo(botUrl string, chatId int) {
 
 	// Получение координат из json'a
-	lat, lon := getCoordinates(chatId)
-	if lat == "err" {
+	lat, lon, err := getCoordinates(chatId)
+	if err != nil {
 		SendMsg(botUrl, chatId, "Пожалуйста обновите свои координаты командой /set")
 		return
 	}
@@ -89,15 +88,15 @@ func SendSunInfo(botUrl string, chatId int) {
 	// Ссылка к апи погоды
 	resp, err := http.Get("https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&lang=ru&exclude=minutely,hourly,daily,alerts&units=metric&appid=" + viper.GetString("weatherToken"))
 	if err != nil {
-		log.Println("weather API error")
-		SendMsg(botUrl, chatId, "weather API error")
+		log.Printf("http.Get error: %s", err)
+		SendMsg(botUrl, chatId, "Внутренняя ошибка")
 		return
 	}
 	defer resp.Body.Close()
 
 	// Проверка респонса
 	if resp.StatusCode != 200 {
-		SendMsg(botUrl, chatId, "weather API error")
+		SendMsg(botUrl, chatId, "Внутренняя ошибка")
 		return
 	}
 
@@ -117,8 +116,8 @@ func SendSunInfo(botUrl string, chatId int) {
 func SendDailyWeather(botUrl string, chatId int, days int) {
 
 	// Получение координат из json'a
-	lat, lon := getCoordinates(chatId)
-	if lat == "err" {
+	lat, lon, err := getCoordinates(chatId)
+	if err != nil {
 		SendMsg(botUrl, chatId, "Пожалуйста обновите свои координаты командой /set")
 		return
 	}
@@ -126,15 +125,15 @@ func SendDailyWeather(botUrl string, chatId int, days int) {
 	// Отправка запроса API
 	resp, err := http.Get("https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&lang=ru&exclude=minutely,current,minutely,alerts&units=metric&appid=" + viper.GetString("weatherToken"))
 	if err != nil {
-		fmt.Println("weather API error")
-		SendMsg(botUrl, chatId, "weather API error")
+		log.Printf("http.Get error: %s", err)
+		SendMsg(botUrl, chatId, "Внутренняя ошибка")
 		return
 	}
 	defer resp.Body.Close()
 
 	// Проверка респонса
 	if resp.StatusCode != 200 {
-		SendMsg(botUrl, chatId, "weather API error")
+		SendMsg(botUrl, chatId, "Внутренняя ошибка")
 		return
 	}
 
@@ -157,38 +156,33 @@ func SendDailyWeather(botUrl string, chatId int, days int) {
 }
 
 // Функция отправки погоды на данный момент
-func SendCurrentWeather(botUrl string, chatId int) error {
+func SendCurrentWeather(botUrl string, chatId int) {
 
 	// Получение координат из json'a
-	lat, lon := getCoordinates(chatId)
-
-	// Проверка на ошибку
-	if lat == "err" {
+	lat, lon, err := getCoordinates(chatId)
+	if err != nil {
 		SendMsg(botUrl, chatId, "Пожалуйста обновите свои координаты командой /set")
-		return errors.New("wrong coordinates")
+		return
 	}
 
 	// Ссылка к апи погоды
-	url := "https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&lang=ru&exclude=minutely,hourly,daily,alerts&units=metric&appid=" + viper.GetString("weatherToken")
-	// Генерация запроса
-	req, _ := http.NewRequest("GET", url, nil)
-	// Выполнение запроса
-	res, err := http.DefaultClient.Do(req)
-
-	// Проверка на ошибку
+	resp, err := http.Get("https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&lang=ru&exclude=minutely,hourly,daily,alerts&units=metric&appid=" + viper.GetString("weatherToken"))
 	if err != nil {
-		// Вывод и возврат ошибки
-		fmt.Println("weather API error")
-		SendMsg(botUrl, chatId, "weather API error")
-		return err
+		log.Printf("http.Get error: %s", err)
+		SendMsg(botUrl, chatId, "Внутренняя ошибка")
+		return
 	}
-	defer res.Body.Close()
+	defer resp.Body.Close()
 
-	// Чтение ответа
-	body, _ := ioutil.ReadAll(res.Body)
-	// Структура для записи ответа
+	// Проверка респонса
+	if resp.StatusCode != 200 {
+		SendMsg(botUrl, chatId, "Внутренняя ошибка")
+		return
+	}
+
+	// Запись респонса
+	body, _ := ioutil.ReadAll(resp.Body)
 	var rs = new(weatherAPIResponse)
-	// Запись ответа
 	json.Unmarshal(body, &rs)
 
 	// Вывод полученных данных
@@ -200,22 +194,6 @@ func SendCurrentWeather(botUrl string, chatId int) error {
 		"\n💧Влажность воздуха: "+strconv.Itoa(rs.Current.Humidity)+"%"+
 		"\n----------------------------------------------")
 
-	return nil
-}
-
-// Функция отправки конкретного прогноза и на два дня вперёд
-func SendThreeDaysWeather(botUrl string, chatId int) {
-
-	// Если просто добавить в switch две команды,
-	// то при некорректных данных будут выводиться две ошибки
-	// Поэтому существует эта функция
-
-	// Отправка текущего прогноза
-	if SendCurrentWeather(botUrl, chatId) == nil {
-
-		// Если всё хорошо, отправка двух дневных карточек
-		SendDailyWeather(botUrl, chatId, 2)
-	}
 }
 
 // Функция вывода списка команд
@@ -240,98 +218,62 @@ func SetPlace(botUrl string, chatId int, coordinates string) {
 	// Открытие json файла для чтения координат
 	file, err := os.Open("weather/coordinates.json")
 	if err != nil {
-		// Вывод и возврат ошибки
-		fmt.Println("Unable to create file:", err)
-		os.Exit(1)
+		log.Fatalf("Unable to open file: %v", err)
+		return
 	}
 	defer file.Close()
 
-	// Map, в которую будет произведена запись всех координат
+	// Запись данных в карту
 	var m map[string]string
-	// Считывание текста файла
 	body, _ := ioutil.ReadAll(file)
-	// Запись в структуру
 	json.Unmarshal(body, &m)
 
-	// Добавление или обновление введенной информации в map
+	// Обновление введенной информации
 	m[strconv.Itoa(chatId)] = coordinates
 
-	// Запись обновленных данных в json
+	// Открытие файла
 	fileU, err := os.Create("weather/coordinates.json")
-
-	// Проверка на ошибку
 	if err != nil {
-		// Вывод и возврат ошибки
-		fmt.Println("Unable to create file:", err)
-		os.Exit(1)
+		log.Fatalf("Unable to create file: %v", err)
+		return
 	}
 	defer fileU.Close()
 
-	// Форматирование координат в json
+	// Запись обновленных данных в json
 	result, _ := json.Marshal(m)
-	// Запись в файл
 	fileU.Write(result)
 
-	//Уведомление об успешной записи данных
 	SendMsg(botUrl, chatId, "Записал координаты!")
 }
 
 // Функция получения координат
-func getCoordinates(chatId int) (string, string) {
+func getCoordinates(chatId int) (string, string, error) {
 
 	// Чтение данных из json файла с координатами
 	file, err := os.Open("weather/coordinates.json")
-
-	// Проверка на ошибку
 	if err != nil {
-		// Вывод и возврат ошибки
-		fmt.Println("Unable to create file:", err)
-		os.Exit(1)
+		log.Fatalf("Unable to open file: %v", err)
+		return "", "", err
 	}
 	defer file.Close()
 
-	// Map нужна для эффективной работы с данными
-	// Ключ - айди диалога; Значение - введенные координаты
+	// Запись данных в структуру
 	var m map[string]string
-	// Считывание текста файла
 	body, _ := ioutil.ReadAll(file)
-	// Запись в структуру
 	json.Unmarshal(body, &m)
 
-	// Получение координат, которые пользователь ввел ранее
-	coords, c := m[strconv.Itoa(chatId)], 0
-
-	// с - переменная, отвечающая за расположение пробела
-	for ; c < len(coords); c++ {
-		// Поиск пробела
-		if coords[c] == ' ' {
-			// Пробел найден, выход из цикла
-			break
-		}
-	}
-
-	// Если пробел в самом начале или его нет - ошибка
-	if c == 0 || c == len(coords) {
-		// Возврат ошибки
-		return "err", "err"
-	}
-
 	// Получение координат
-	latFloat, err := strconv.ParseFloat(coords[:c], 64)
-	// Проверка. Широта не может быть больше 90 или меньше -90
+	coords := strings.Fields(m[strconv.Itoa(chatId)])
+
+	// Проверка координат
+	latFloat, err := strconv.ParseFloat(coords[0], 64)
 	if err != nil || !(latFloat > -90 && latFloat < 90) {
-		// Вывод ошибки
-		return "err", "err"
+		return "", "", err
 	}
-
-	// Получение координат
-	lonFloat, err := strconv.ParseFloat(coords[c+1:], 64)
-	// Проверка. У долготы тоже есть рамки: от -180 до 180
+	lonFloat, err := strconv.ParseFloat(coords[1], 64)
 	if err != nil || !(lonFloat > -180 && lonFloat < 180) {
-		// Вывод ошибки
-		return "err", "err"
+		return "", "", err
 	}
 
-	// Возврат координат
-	return coords[:c], coords[c+1:]
+	return coords[0], coords[1], nil
 }
