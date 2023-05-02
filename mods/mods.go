@@ -106,8 +106,8 @@ func SendSunInfo(botUrl string, chatId int) {
 	json.Unmarshal(body, &rs)
 
 	// Вывод полученных данных пользователю
-	SendMsg(botUrl, chatId, "🌄 Восход и закат на сегодня 🌄\n \n"+
-		"🌅 Восход наступит в "+time.Unix(int64(rs.Current.Sunrise), 0).Add(3*time.Hour).Format("15:04:05")+
+	SendMsg(botUrl, chatId, "🌄 Восход и закат на сегодня 🌄"+
+		"\n🌅 Восход наступит в "+time.Unix(int64(rs.Current.Sunrise), 0).Add(3*time.Hour).Format("15:04:05")+
 		"\n🌇 А закат в "+time.Unix(int64(rs.Current.Sunset), 0).Add(3*time.Hour).Format("15:04:05"))
 
 }
@@ -144,7 +144,7 @@ func SendDailyWeather(botUrl string, chatId int, days int) {
 
 	// Вывод полученных данных
 	for n := 1; n < days+1; n++ {
-		SendMsg(botUrl, chatId, "Погода на "+time.Unix(rs.Daily[n].Dt, 0).Format("02/01/2006")+":\n \n"+
+		SendMsg(botUrl, chatId, "Погода на "+time.Unix(rs.Daily[n].Dt, 0).Format("02/01/2006")+":"+
 			"\n----------------------------------------------"+
 			"\n🌡Температура: "+strconv.Itoa(int(rs.Daily[n].Temp.Morning))+"°"+" -> "+strconv.Itoa(int(rs.Daily[n].Temp.Evening))+"°"+
 			"\n🤔Ощущается как: "+strconv.Itoa(int(rs.Daily[n].Feels_like.Morning))+"°"+" -> "+strconv.Itoa(int(rs.Daily[n].Feels_like.Evening))+"°"+
@@ -186,7 +186,7 @@ func SendCurrentWeather(botUrl string, chatId int) {
 	json.Unmarshal(body, &rs)
 
 	// Вывод полученных данных
-	SendMsg(botUrl, chatId, "Погода на сегодня"+":\n \n"+
+	SendMsg(botUrl, chatId, "Погода сейчас"+":"+
 		"\n----------------------------------------------"+
 		"\n🌡Температура: "+strconv.Itoa(int(rs.Current.Temp))+
 		"\n🤔Ощущается как: "+strconv.Itoa(int(rs.Current.Feels_like))+"°"+
@@ -207,10 +207,10 @@ func Help(botUrl string, chatId int) {
 }
 
 // Функция установки координат
-func SetPlace(botUrl string, chatId int, coordinates string) {
+func SetPlace(botUrl string, chatId int, lat, lon string) {
 
 	// Проверка на параметр
-	if coordinates == "" {
+	if lat == "" || lon == "" {
 		SendMsg(botUrl, chatId, "Вы не написали координаты, воспользуйтесь шаблоном ниже:\n\n/set 55.5692101 37.4588852")
 		return
 	}
@@ -229,7 +229,7 @@ func SetPlace(botUrl string, chatId int, coordinates string) {
 	json.Unmarshal(body, &m)
 
 	// Обновление введенной информации
-	m[strconv.Itoa(chatId)] = coordinates
+	m[strconv.Itoa(chatId)] = lat + " " + lon
 
 	// Открытие файла
 	fileU, err := os.Create("weather/coordinates.json")

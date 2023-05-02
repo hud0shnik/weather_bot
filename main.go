@@ -117,7 +117,7 @@ func respond(botUrl string, update update) {
 		case "/sun":
 			mods.SendSunInfo(botUrl, update.Message.Chat.ChatId)
 		case "/set":
-			mods.SetPlace(botUrl, update.Message.Chat.ChatId, request[1])
+			mods.SetPlace(botUrl, update.Message.Chat.ChatId, request[1], request[2])
 		case "/help", "/start":
 			mods.Help(botUrl, update.Message.Chat.ChatId)
 		default:
