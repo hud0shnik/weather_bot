@@ -116,7 +116,7 @@ func respond(botUrl string, update update) {
 		case "/sun":
 			mods.Sun(botUrl, update.Message.Chat.ChatId)
 		case "/set":
-			mods.SendMsg(botUrl, update.Message.Chat.ChatId, "Вы не написали координаты, воспользуйтесь шаблоном ниже:\n\n/set 55.5692101 37.4588852")
+			mods.SetPlace(botUrl, update.Message.Chat.ChatId, request[1])
 		case "/help", "/start":
 			mods.Help(botUrl, update.Message.Chat.ChatId)
 		default:

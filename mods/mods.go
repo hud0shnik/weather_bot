@@ -241,12 +241,16 @@ func Help(botUrl string, chatId int) {
 }
 
 // Функция установки координат
-func SetPlace(botUrl string, chatId int, text string) {
+func SetPlace(botUrl string, chatId int, coordinates string) {
+
+	// Проверка на параметр
+	if coordinates == "" {
+		SendMsg(botUrl, chatId, "Вы не написали координаты, воспользуйтесь шаблоном ниже:\n\n/set 55.5692101 37.4588852")
+		return
+	}
 
 	// Открытие json файла для чтения координат
 	file, err := os.Open("weather/coordinates.json")
-
-	// Проверка на ошибку
 	if err != nil {
 		// Вывод и возврат ошибки
 		fmt.Println("Unable to create file:", err)
@@ -262,7 +266,7 @@ func SetPlace(botUrl string, chatId int, text string) {
 	json.Unmarshal(body, &m)
 
 	// Добавление или обновление введенной информации в map
-	m[strconv.Itoa(chatId)] = text
+	m[strconv.Itoa(chatId)] = coordinates
 
 	// Запись обновленных данных в json
 	fileU, err := os.Create("weather/coordinates.json")
