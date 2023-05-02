@@ -1,12 +1,10 @@
 package mods
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -14,31 +12,6 @@ import (
 
 	"github.com/spf13/viper"
 )
-
-// Структуры для работы с Telegram API
-
-type TelegramResponse struct {
-	Result []Update `json:"result"`
-}
-
-type Update struct {
-	UpdateId int     `json:"update_id"`
-	Message  Message `json:"message"`
-}
-
-type Message struct {
-	Chat Chat   `json:"chat"`
-	Text string `json:"text"`
-}
-
-type Chat struct {
-	ChatId int `json:"id"`
-}
-
-type SendMessage struct {
-	ChatId int    `json:"chat_id"`
-	Text   string `json:"text"`
-}
 
 // Структуры для работы с Openweather API
 type WeatherAPIResponse struct {
@@ -100,28 +73,6 @@ type openMeteoHourly struct {
 	Humidity    []int     `json:"relativehumidity_2m"`
 	Feels_like  []float32 `json:"apparent_temperature"`
 	Wind_speed  []float32 `json:"windspeed_10m"`
-}
-
-// Функция отправки сообщения
-func SendMsg(botUrl string, chatId int, msg string) error {
-
-	// Формирование сообщения
-	buf, err := json.Marshal(SendMessage{
-		ChatId: chatId,
-		Text:   msg,
-	})
-	if err != nil {
-		log.Printf("json.Marshal error: %s", err)
-		return err
-	}
-
-	// Отправка сообщения
-	_, err = http.Post(botUrl+"/sendMessage", "application/json", bytes.NewBuffer(buf))
-	if err != nil {
-		log.Printf("sendMessage error: %s", err)
-		return err
-	}
-	return nil
 }
 
 // Функция вывода информации о рассвете и закате
