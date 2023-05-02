@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"tgBot/mods"
 
 	"github.com/spf13/viper"
@@ -41,7 +42,7 @@ func main() {
 	// Инициализация конфига (токенов)
 	err := mods.InitConfig()
 	if err != nil {
-		log.Println("Config error: ", err)
+		log.Fatalf("initConfig error: %s", err)
 		return
 	}
 
@@ -55,17 +56,13 @@ func main() {
 		// Получение апдейтов
 		updates, err := getUpdates(botUrl, offSet)
 		if err != nil {
-			log.Println("Something went wrong: ", err)
+			log.Fatalf("getUpdates error: %s", err)
 			return
 		}
 
 		// Обработка апдейтов
 		for _, update := range updates {
-
-			// Вызов функции генерации ответа
 			respond(botUrl, update)
-
-			// Обновление счётчика апдейтов
 			offSet = update.UpdateId + 1
 		}
 
@@ -99,66 +96,38 @@ func getUpdates(botUrl string, offset int) ([]update, error) {
 }
 
 // Функция обработки сообщений
-func respond(botUrl string, update update) error {
+func respond(botUrl string, update update) {
 
-	// msg - текст сообщения пользователя
-	msg := update.Message.Text
+	// Обработчик команд
+	if update.Message.Text != "" {
 
-	// Обработчик комманд
-	switch msg {
+		request := append(strings.Split(update.Message.Text, " "), "", "")
 
-	// Если сообщение = /week
-	case "/week":
-		// Отправка семи карточек (по карточке на день)
-		mods.SendDailyWeather(botUrl, update.Message.Chat.ChatId, 7)
-		return nil
+		// Вывод реквеста для тестов
+		// fmt.Println("request: \t", request)
 
-	// Если сообщение = /weather
-	case "/weather":
-		// Отправка трёх карточек (по карточке на день)
-		mods.SendThreeDaysWeather(botUrl, update.Message.Chat.ChatId)
-		return nil
+		switch request[0] {
+		case "/week":
+			mods.SendDailyWeather(botUrl, update.Message.Chat.ChatId, 7)
+		case "/weather":
+			mods.SendThreeDaysWeather(botUrl, update.Message.Chat.ChatId)
+		case "/current":
+			mods.SendCurrentWeather(botUrl, update.Message.Chat.ChatId)
+		case "/sun":
+			mods.Sun(botUrl, update.Message.Chat.ChatId)
+		case "/set":
+			mods.SendMsg(botUrl, update.Message.Chat.ChatId, "Вы не написали координаты, воспользуйтесь шаблоном ниже:\n\n/set 55.5692101 37.4588852")
+		case "/help", "/start":
+			mods.Help(botUrl, update.Message.Chat.ChatId)
+		default:
+			mods.SendMsg(botUrl, update.Message.Chat.ChatId, "Я не понимаю, воспользуйтесь /help")
+		}
 
-	// Если сообщение = /current
-	case "/current":
-		// Отправка погоды на данный момент
-		mods.SendCurrentWeather(botUrl, update.Message.Chat.ChatId)
-		return nil
+	} else {
 
-	// Если сообщение = /sun
-	case "/sun":
-		// Отправка времени рассвета и заката
-		mods.Sun(botUrl, update.Message.Chat.ChatId)
-		return nil
-
-	// Если сообщение = /set (без параметра)
-	case "/set":
-		// Уведомление о том, как нужно пользоваться этой функцией
-		mods.SendMsg(botUrl, update.Message.Chat.ChatId, "Вы не написали координаты, воспользуйтесь шаблоном ниже:\n\n/set 55.5692101 37.4588852")
-		return nil
-
-	// Если сообщение = /help или /start
-	case "/help", "/start":
-		// Вывод списка команд
-		mods.Help(botUrl, update.Message.Chat.ChatId)
-		return nil
-	}
-
-	// Обработка команды /set с параметром
-	if len(msg) > 5 && msg[:4] == "/set" {
-
-		// Запись координат
-		mods.SetPlace(botUrl, update.Message.Chat.ChatId, update.Message.Text[5:])
-
-		// Уведомление для пользователя
-		mods.SendMsg(botUrl, update.Message.Chat.ChatId, "Введённые координаты: "+msg[4:])
-
-		// Всё хорошо, возврат нулевой ошибки
-		return nil
+		// Если пользователь отправил не сообщение:
+		mods.SendMsg(botUrl, update.Message.Chat.ChatId, "Пока я воспринимаю только текст")
 
 	}
 
-	// Дефолтный респонс
-	mods.SendMsg(botUrl, update.Message.Chat.ChatId, "Я не понимаю, воспользуйтесь /help")
-	return nil
 }
