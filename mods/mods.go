@@ -77,35 +77,33 @@ type openMeteoHourly struct {
 }
 
 // Функция вывода информации о рассвете и закате
-func Sun(botUrl string, chatId int) error {
+func SendSunInfo(botUrl string, chatId int) {
 
 	// Получение координат из json'a
 	lat, lon := getCoordinates(chatId)
-
-	// Проверка на ошибку
 	if lat == "err" {
 		SendMsg(botUrl, chatId, "Пожалуйста обновите свои координаты командой /set")
-		return errors.New("wrong coordinates")
+		return
 	}
 
 	// Ссылка к апи погоды
-	url := "https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&lang=ru&exclude=minutely,hourly,daily,alerts&units=metric&appid=" + viper.GetString("weatherToken")
-	// Генерация запроса
-	req, _ := http.NewRequest("GET", url, nil)
-	// Выполнение запроса
-	res, err := http.DefaultClient.Do(req)
+	resp, err := http.Get("https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&lang=ru&exclude=minutely,hourly,daily,alerts&units=metric&appid=" + viper.GetString("weatherToken"))
 	if err != nil {
 		log.Println("weather API error")
 		SendMsg(botUrl, chatId, "weather API error")
-		return err
+		return
 	}
-	defer res.Body.Close()
+	defer resp.Body.Close()
 
-	// Чтение ответа
-	body, _ := ioutil.ReadAll(res.Body)
-	// Структура для записи ответа
+	// Проверка респонса
+	if resp.StatusCode != 200 {
+		SendMsg(botUrl, chatId, "weather API error")
+		return
+	}
+
+	// Запись респонса
+	body, _ := ioutil.ReadAll(resp.Body)
 	var rs = new(weatherAPIResponse)
-	// Запись ответа
 	json.Unmarshal(body, &rs)
 
 	// Вывод полученных данных пользователю
@@ -113,7 +111,6 @@ func Sun(botUrl string, chatId int) error {
 		"🌅 Восход наступит в "+time.Unix(int64(rs.Current.Sunrise), 0).Add(3*time.Hour).Format("15:04:05")+
 		"\n🌇 А закат в "+time.Unix(int64(rs.Current.Sunset), 0).Add(3*time.Hour).Format("15:04:05"))
 
-	return nil
 }
 
 // Функция отправки дневных карточек
