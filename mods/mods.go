@@ -215,6 +215,18 @@ func SetPlace(botUrl string, chatId int, lat, lon string) {
 		return
 	}
 
+	// Проверка координат
+	latFloat, err := strconv.ParseFloat(lat, 64)
+	if err != nil || !(latFloat > -90 && latFloat < 90) {
+		SendMsg(botUrl, chatId, "Широта (первый параметр) может принимать значения в диапазоне от -90 до 90.\nВоспользуйтесь шаблоном ниже:\n\n/set 55.5692101 37.4588852")
+		return
+	}
+	lonFloat, err := strconv.ParseFloat(lon, 64)
+	if err != nil || !(lonFloat > -180 && lonFloat < 180) {
+		SendMsg(botUrl, chatId, "Долгота (второй параметр) может принимать значения в диапазоне от -180 до 180.\nВоспользуйтесь шаблоном ниже:\n\n/set 55.5692101 37.4588852")
+		return
+	}
+
 	// Открытие json файла для чтения координат
 	file, err := os.Open("weather/coordinates.json")
 	if err != nil {
@@ -264,16 +276,6 @@ func getCoordinates(chatId int) (string, string, error) {
 
 	// Получение координат
 	coords := strings.Fields(m[strconv.Itoa(chatId)])
-
-	// Проверка координат
-	latFloat, err := strconv.ParseFloat(coords[0], 64)
-	if err != nil || !(latFloat > -90 && latFloat < 90) {
-		return "", "", err
-	}
-	lonFloat, err := strconv.ParseFloat(coords[1], 64)
-	if err != nil || !(lonFloat > -180 && lonFloat < 180) {
-		return "", "", err
-	}
 
 	return coords[0], coords[1], nil
 }
