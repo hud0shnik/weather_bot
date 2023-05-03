@@ -14,6 +14,7 @@ import (
 )
 
 // Структуры для работы с Openweather API
+
 type weatherAPIResponse struct {
 	Current current `json:"current"`
 	Daily   []day   `json:"daily"`
@@ -61,27 +62,13 @@ type weatherInfo struct {
 	Description string `json:"description"`
 }
 
-// Структуры для работы с Open-Meteo API
-
-type openMeteoResponse struct {
-	Error  bool            `json:"error"`
-	Hourly openMeteoHourly `json:"hourly"`
-}
-
-type openMeteoHourly struct {
-	Temperature []float32 `json:"temperature_2m"`
-	Humidity    []int     `json:"relativehumidity_2m"`
-	Feels_like  []float32 `json:"apparent_temperature"`
-	Wind_speed  []float32 `json:"windspeed_10m"`
-}
-
 // Функция вывода информации о рассвете и закате
 func SendSunInfo(botUrl string, chatId int) {
 
 	// Получение координат из json'a
 	lat, lon, err := getCoordinates(chatId)
 	if err != nil {
-		SendMsg(botUrl, chatId, "Пожалуйста обновите свои координаты командой /set")
+		SendMsg(botUrl, chatId, "Пожалуйста обновите свои координаты командой <b>/set</b>")
 		return
 	}
 
@@ -107,8 +94,8 @@ func SendSunInfo(botUrl string, chatId int) {
 
 	// Вывод полученных данных пользователю
 	SendMsg(botUrl, chatId, "🌄 Восход и закат на сегодня 🌄"+
-		"\n🌅 Восход наступит в "+time.Unix(int64(rs.Current.Sunrise), 0).Add(3*time.Hour).Format("15:04:05")+
-		"\n🌇 А закат в "+time.Unix(int64(rs.Current.Sunset), 0).Add(3*time.Hour).Format("15:04:05"))
+		"\n🌅 Восход наступит в <i>"+time.Unix(int64(rs.Current.Sunrise), 0).Add(3*time.Hour).Format("15:04:05")+"</i>"+
+		"\n🌇 А закат в <i>"+time.Unix(int64(rs.Current.Sunset), 0).Add(3*time.Hour).Format("15:04:05")+"</i>")
 
 }
 
@@ -118,7 +105,7 @@ func SendDailyWeather(botUrl string, chatId int, days int) {
 	// Получение координат из json'a
 	lat, lon, err := getCoordinates(chatId)
 	if err != nil {
-		SendMsg(botUrl, chatId, "Пожалуйста обновите свои координаты командой /set")
+		SendMsg(botUrl, chatId, "Пожалуйста обновите свои координаты командой <b>/set</b>")
 		return
 	}
 
@@ -144,12 +131,12 @@ func SendDailyWeather(botUrl string, chatId int, days int) {
 
 	// Вывод полученных данных
 	for n := 1; n < days+1; n++ {
-		SendMsg(botUrl, chatId, "Погода на "+time.Unix(rs.Daily[n].Dt, 0).Format("02/01/2006")+":"+
+		SendMsg(botUrl, chatId, "Погода на <b>"+time.Unix(rs.Daily[n].Dt, 0).Format("02/01/2006")+"</b>:"+
 			"\n----------------------------------------------"+
-			"\n🌡Температура: "+strconv.Itoa(int(rs.Daily[n].Temp.Morning))+"°"+" -> "+strconv.Itoa(int(rs.Daily[n].Temp.Evening))+"°"+
-			"\n🤔Ощущается как: "+strconv.Itoa(int(rs.Daily[n].Feels_like.Morning))+"°"+" -> "+strconv.Itoa(int(rs.Daily[n].Feels_like.Evening))+"°"+
-			"\n💨Ветер: "+strconv.Itoa(int(rs.Daily[n].Wind_speed))+" м/с"+
-			"\n💧Влажность воздуха: "+strconv.Itoa(rs.Daily[n].Humidity)+"%"+
+			"\n🌡Температура: <b>"+strconv.Itoa(int(rs.Daily[n].Temp.Morning))+"°</b>"+" -> <b>"+strconv.Itoa(int(rs.Daily[n].Temp.Evening))+"°</b>"+
+			"\n🤔Ощущается как: <b>"+strconv.Itoa(int(rs.Daily[n].Feels_like.Morning))+"°</b>"+" -> <b>"+strconv.Itoa(int(rs.Daily[n].Feels_like.Evening))+"°</b>"+
+			"\n💨Ветер: <b>"+strconv.Itoa(int(rs.Daily[n].Wind_speed))+" м/с</b>"+
+			"\n💧Влажность воздуха: <b>"+strconv.Itoa(rs.Daily[n].Humidity)+"%</b>"+
 			"\n----------------------------------------------")
 	}
 
@@ -161,7 +148,7 @@ func SendCurrentWeather(botUrl string, chatId int) {
 	// Получение координат из json'a
 	lat, lon, err := getCoordinates(chatId)
 	if err != nil {
-		SendMsg(botUrl, chatId, "Пожалуйста обновите свои координаты командой /set")
+		SendMsg(botUrl, chatId, "Пожалуйста обновите свои координаты командой <b>/set</b>")
 		return
 	}
 
@@ -186,12 +173,12 @@ func SendCurrentWeather(botUrl string, chatId int) {
 	json.Unmarshal(body, &rs)
 
 	// Вывод полученных данных
-	SendMsg(botUrl, chatId, "Погода сейчас"+":"+
+	SendMsg(botUrl, chatId, "Погода <i>сейчас</i>"+":"+
 		"\n----------------------------------------------"+
-		"\n🌡Температура: "+strconv.Itoa(int(rs.Current.Temp))+
-		"\n🤔Ощущается как: "+strconv.Itoa(int(rs.Current.Feels_like))+"°"+
-		"\n💨Ветер: "+strconv.Itoa(int(rs.Current.Wind_speed))+" м/с"+
-		"\n💧Влажность воздуха: "+strconv.Itoa(rs.Current.Humidity)+"%"+
+		"\n🌡Температура: <b>"+strconv.Itoa(int(rs.Current.Temp))+"</b>"+
+		"\n🤔Ощущается как: <b>"+strconv.Itoa(int(rs.Current.Feels_like))+"°"+"</b>"+
+		"\n💨Ветер: <b>"+strconv.Itoa(int(rs.Current.Wind_speed))+" м/с"+"</b>"+
+		"\n💧Влажность воздуха: <b>"+strconv.Itoa(rs.Current.Humidity)+"%"+"</b>"+
 		"\n----------------------------------------------")
 
 }
@@ -218,12 +205,12 @@ func SetPlace(botUrl string, chatId int, lat, lon string) {
 	// Проверка координат
 	latFloat, err := strconv.ParseFloat(lat, 64)
 	if err != nil || !(latFloat > -90 && latFloat < 90) {
-		SendMsg(botUrl, chatId, "Широта (первый параметр) может принимать значения в диапазоне от -90 до 90.\nВоспользуйтесь шаблоном ниже:\n\n/set 55.5692101 37.4588852")
+		SendMsg(botUrl, chatId, "Широта (первый параметр) может принимать значения в диапазоне от <b>-90 до 90</b>.\nВоспользуйтесь шаблоном ниже:\n\n/set 55.5692101 37.4588852")
 		return
 	}
 	lonFloat, err := strconv.ParseFloat(lon, 64)
 	if err != nil || !(lonFloat > -180 && lonFloat < 180) {
-		SendMsg(botUrl, chatId, "Долгота (второй параметр) может принимать значения в диапазоне от -180 до 180.\nВоспользуйтесь шаблоном ниже:\n\n/set 55.5692101 37.4588852")
+		SendMsg(botUrl, chatId, "Долгота (второй параметр) может принимать значения в диапазоне от <b>-180 до 180</b>.\nВоспользуйтесь шаблоном ниже:\n\n/set 55.5692101 37.4588852")
 		return
 	}
 
