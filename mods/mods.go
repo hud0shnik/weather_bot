@@ -209,7 +209,7 @@ func Help(botUrl string, chatId int) {
 // Функция установки координат
 func SetPlace(botUrl string, chatId int, lat, lon string) {
 
-	// Проверка на параметр
+	// Проверка на параметры
 	if lat == "" || lon == "" {
 		SendMsg(botUrl, chatId, "Вы не написали координаты, воспользуйтесь шаблоном ниже:\n\n/set 55.5692101 37.4588852")
 		return
@@ -230,7 +230,7 @@ func SetPlace(botUrl string, chatId int, lat, lon string) {
 	// Открытие json файла для чтения координат
 	file, err := os.Open("weather/coordinates.json")
 	if err != nil {
-		log.Fatalf("Unable to open file: %v", err)
+		log.Fatalf("Unable to open file: %s", err)
 		return
 	}
 	defer file.Close()
@@ -246,7 +246,7 @@ func SetPlace(botUrl string, chatId int, lat, lon string) {
 	// Открытие файла
 	fileU, err := os.Create("weather/coordinates.json")
 	if err != nil {
-		log.Fatalf("Unable to create file: %v", err)
+		log.Fatalf("Unable to create file: %s", err)
 		return
 	}
 	defer fileU.Close()
@@ -264,7 +264,7 @@ func getCoordinates(chatId int) (string, string, error) {
 	// Чтение данных из json файла с координатами
 	file, err := os.Open("weather/coordinates.json")
 	if err != nil {
-		log.Fatalf("Unable to open file: %v", err)
+		log.Fatalf("Unable to open file: %s", err)
 		return "", "", err
 	}
 	defer file.Close()
