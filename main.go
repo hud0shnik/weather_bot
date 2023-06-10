@@ -1,19 +1,22 @@
 package main
 
 import (
-	"log"
-	"tgBot/internal/handler"
-	"tgBot/internal/telegram"
+	"github.com/hud0shnik/weather_bot/internal/handler"
+	"github.com/hud0shnik/weather_bot/internal/telegram"
+	"github.com/sirupsen/logrus"
 
 	"github.com/spf13/viper"
 )
 
 func main() {
 
+	// Настройка логгера
+	logrus.SetFormatter(&logrus.JSONFormatter{})
+
 	// Инициализация конфига (токенов)
 	err := initConfig()
 	if err != nil {
-		log.Fatalf("initConfig error: %s", err)
+		logrus.Fatalf("initConfig error: %s", err)
 		return
 	}
 
@@ -27,7 +30,7 @@ func main() {
 		// Получение апдейтов
 		updates, err := telegram.GetUpdates(botUrl, offSet)
 		if err != nil {
-			log.Fatalf("getUpdates error: %s", err)
+			logrus.Fatalf("getUpdates error: %s", err)
 			return
 		}
 

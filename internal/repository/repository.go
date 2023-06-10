@@ -3,12 +3,12 @@ package repository
 import (
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/hud0shnik/weather_bot/internal/send"
+	"github.com/sirupsen/logrus"
 )
 
 // Функция установки координат
@@ -35,7 +35,7 @@ func SetCoordinates(botUrl string, chatId int, lat, lon string) {
 	// Открытие json файла для чтения координат
 	file, err := os.Open("weather/coordinates.json")
 	if err != nil {
-		log.Fatalf("Unable to open file: %s", err)
+		logrus.Fatalf("Unable to open file: %s", err)
 		return
 	}
 	defer file.Close()
@@ -51,7 +51,7 @@ func SetCoordinates(botUrl string, chatId int, lat, lon string) {
 	// Открытие файла
 	fileU, err := os.Create("weather/coordinates.json")
 	if err != nil {
-		log.Fatalf("Unable to create file: %s", err)
+		logrus.Fatalf("Unable to create file: %s", err)
 		return
 	}
 	defer fileU.Close()
@@ -69,7 +69,7 @@ func GetCoordinates(chatId int) (string, string, error) {
 	// Чтение данных из json файла с координатами
 	file, err := os.Open("weather/coordinates.json")
 	if err != nil {
-		log.Fatalf("Unable to open file: %s", err)
+		logrus.Fatalf("Unable to open file: %s", err)
 		return "", "", err
 	}
 	defer file.Close()
