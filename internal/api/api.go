@@ -4,14 +4,13 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
 	"github.com/hud0shnik/weather_bot/internal/repository"
 	"github.com/hud0shnik/weather_bot/internal/send"
 	"github.com/sirupsen/logrus"
-
-	"github.com/spf13/viper"
 )
 
 // Структуры для работы с Openweather API
@@ -74,7 +73,7 @@ func SendSunInfo(botUrl string, chatId int) {
 	}
 
 	// Ссылка к апи погоды
-	resp, err := http.Get("https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&lang=ru&exclude=minutely,hourly,daily,alerts&units=metric&appid=" + viper.GetString("weatherToken"))
+	resp, err := http.Get("https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&lang=ru&exclude=minutely,hourly,daily,alerts&units=metric&appid=" + os.Getenv("WEATHER_TOKEN"))
 	if err != nil {
 		logrus.Printf("http.Get error: %s", err)
 		send.SendMsg(botUrl, chatId, "Внутренняя ошибка")
@@ -111,7 +110,7 @@ func SendDailyWeather(botUrl string, chatId int, days int) {
 	}
 
 	// Отправка запроса API
-	resp, err := http.Get("https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&lang=ru&exclude=minutely,current,minutely,alerts&units=metric&appid=" + viper.GetString("weatherToken"))
+	resp, err := http.Get("https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&lang=ru&exclude=minutely,current,minutely,alerts&units=metric&appid=" + os.Getenv("WEATHER_TOKEN"))
 	if err != nil {
 		logrus.Printf("http.Get error: %s", err)
 		send.SendMsg(botUrl, chatId, "Внутренняя ошибка")
@@ -154,7 +153,7 @@ func SendCurrentWeather(botUrl string, chatId int) {
 	}
 
 	// Ссылка к апи погоды
-	resp, err := http.Get("https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&lang=ru&exclude=minutely,hourly,daily,alerts&units=metric&appid=" + viper.GetString("weatherToken"))
+	resp, err := http.Get("https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&lang=ru&exclude=minutely,hourly,daily,alerts&units=metric&appid=" + os.Getenv("WEATHER_TOKEN"))
 	if err != nil {
 		logrus.Printf("http.Get error: %s", err)
 		send.SendMsg(botUrl, chatId, "Внутренняя ошибка")

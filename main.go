@@ -1,11 +1,12 @@
 package main
 
 import (
+	"os"
+
 	"github.com/hud0shnik/weather_bot/internal/handler"
 	"github.com/hud0shnik/weather_bot/internal/telegram"
+	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
-
-	"github.com/spf13/viper"
 )
 
 func main() {
@@ -13,15 +14,11 @@ func main() {
 	// Настройка логгера
 	logrus.SetFormatter(&logrus.JSONFormatter{})
 
-	// Инициализация конфига (токенов)
-	err := initConfig()
-	if err != nil {
-		logrus.Fatalf("initConfig error: %s", err)
-		return
-	}
+	// Загрузка переменных окружения
+	godotenv.Load()
 
 	// Url бота для отправки и приёма сообщений
-	botUrl := "https://api.telegram.org/bot" + viper.GetString("token")
+	botUrl := "https://api.telegram.org/bot" + os.Getenv("TOKEN")
 	offSet := 0
 
 	// Цикл работы бота
@@ -43,13 +40,4 @@ func main() {
 		// Вывод в консоль для тестов
 		// fmt.Println(updates)
 	}
-}
-
-// Функция инициализации конфига (всех токенов)
-func initConfig() error {
-
-	viper.AddConfigPath("configs")
-	viper.SetConfigName("config")
-
-	return viper.ReadInConfig()
 }
