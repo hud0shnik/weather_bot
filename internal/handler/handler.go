@@ -2,11 +2,12 @@ package handler
 
 import (
 	"strings"
-	"tgBot/internal/api"
-	"tgBot/internal/commands"
-	"tgBot/internal/repository"
-	"tgBot/internal/send"
-	"tgBot/internal/telegram"
+
+	"github.com/hud0shnik/weather_bot/internal/api"
+	"github.com/hud0shnik/weather_bot/internal/commands"
+	"github.com/hud0shnik/weather_bot/internal/repository"
+	"github.com/hud0shnik/weather_bot/internal/send"
+	"github.com/hud0shnik/weather_bot/internal/telegram"
 )
 
 // Функция обработки сообщений

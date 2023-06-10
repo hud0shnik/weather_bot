@@ -1,6 +1,6 @@
 package commands
 
-import "tgBot/internal/send"
+import "github.com/hud0shnik/weather_bot/internal/send"
 
 // Функция вывода списка команд
 func Help(botUrl string, chatId int) {

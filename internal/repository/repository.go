@@ -7,7 +7,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"tgBot/internal/send"
+
+	"github.com/hud0shnik/weather_bot/internal/send"
 )
 
 // Функция установки координат

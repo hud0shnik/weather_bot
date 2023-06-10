@@ -6,9 +6,10 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"tgBot/internal/repository"
-	"tgBot/internal/send"
 	"time"
+
+	"github.com/hud0shnik/weather_bot/internal/repository"
+	"github.com/hud0shnik/weather_bot/internal/send"
 
 	"github.com/spf13/viper"
 )

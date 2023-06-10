@@ -1,4 +1,4 @@
-module tgBot
+module github.com/hud0shnik/weather_bot
 
 go 1.20
 
