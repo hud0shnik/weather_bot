@@ -2,6 +2,7 @@ package repository
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -79,8 +80,14 @@ func GetCoordinates(chatId int) (string, string, error) {
 	body, _ := ioutil.ReadAll(file)
 	json.Unmarshal(body, &m)
 
+	// Поиск и проверка на наличие записи
+	coordsString, ok := m[strconv.Itoa(chatId)]
+	if !ok {
+		return "", "", errors.New("coordinates not found")
+	}
+
 	// Получение координат
-	coords := strings.Fields(m[strconv.Itoa(chatId)])
+	coords := strings.Fields(coordsString)
 
 	return coords[0], coords[1], nil
 }
