@@ -22,6 +22,20 @@
 Бот просит координаты, запоминает их и выводит погоду по ним. Также у него можно узнать время восхода и заката солнца. Бот использует openweather API для погоды
 и Heroku для хостинга. Координаты хранятся в json файле в формате </br> "айди чата : координаты". 
 
+
+<h3 align="left">🐳 Запуск в Docker:</h3>
+
+Сборка 
+```
+sudo docker build -t weather_bot .
+```
+
+Запуск
+```
+docker run -e TOKEN="<token_value>" -e WEATHER_TOKEN="<token_value>" weather_bot
+```
+
+
 <h3 align="left">🔗 Ссылка на бота:</h3>
 <h1 align="center">
    <a href="https://t.me/hud0shnik_weather_bot" target="_blank"><img src="https://img.icons8.com/external-vitaliy-gorbachev-blue-vitaly-gorbachev/60/000000/external-robot-support-vitaliy-gorbachev-blue-vitaly-gorbachev.png" alt="telegram" width="60" height="60"/></a>
