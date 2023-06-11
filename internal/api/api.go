@@ -68,7 +68,7 @@ func SendSunInfo(botUrl string, chatId int) {
 	// Получение координат из json'a
 	lat, lon, err := repository.GetCoordinates(chatId)
 	if err != nil {
-		send.SendMsg(botUrl, chatId, "Пожалуйста обновите свои координаты командой <b>/set</b>")
+		send.SendMsg(botUrl, chatId, "Пожалуйста запишите свои координаты командой <b>/set</b>")
 		return
 	}
 
@@ -105,7 +105,7 @@ func SendDailyWeather(botUrl string, chatId int, days int) {
 	// Получение координат из json'a
 	lat, lon, err := repository.GetCoordinates(chatId)
 	if err != nil {
-		send.SendMsg(botUrl, chatId, "Пожалуйста обновите свои координаты командой <b>/set</b>")
+		send.SendMsg(botUrl, chatId, "Пожалуйста запишите свои координаты командой <b>/set</b>")
 		return
 	}
 
@@ -148,7 +148,7 @@ func SendCurrentWeather(botUrl string, chatId int) {
 	// Получение координат из json'a
 	lat, lon, err := repository.GetCoordinates(chatId)
 	if err != nil {
-		send.SendMsg(botUrl, chatId, "Пожалуйста обновите свои координаты командой <b>/set</b>")
+		send.SendMsg(botUrl, chatId, "Пожалуйста запишите свои координаты командой <b>/set</b>")
 		return
 	}
 
