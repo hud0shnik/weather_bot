@@ -62,14 +62,32 @@ type weatherInfo struct {
 	Description string `json:"description"`
 }
 
+// Функция вывода прогноза на три дня
+func SendClassicWeather(botUrl string, chatId int) error {
+
+	// Отправление прогноза на нынешнее время
+	err := SendCurrentWeather(botUrl, chatId)
+	if err != nil {
+		return err
+	}
+
+	// Отправление прогноза на два следующих дня
+	err = SendDailyWeather(botUrl, chatId, 2)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Функция вывода информации о рассвете и закате
-func SendSunInfo(botUrl string, chatId int) {
+func SendSunInfo(botUrl string, chatId int) error {
 
 	// Получение координат из json'a
 	lat, lon, err := repository.GetCoordinates(chatId)
 	if err != nil {
 		send.SendMsg(botUrl, chatId, "Пожалуйста запишите свои координаты командой <b>/set</b>")
-		return
+		return err
 	}
 
 	// Ссылка к апи погоды
@@ -77,14 +95,14 @@ func SendSunInfo(botUrl string, chatId int) {
 	if err != nil {
 		logrus.Printf("http.Get error: %s", err)
 		send.SendMsg(botUrl, chatId, "Внутренняя ошибка")
-		return
+		return err
 	}
 	defer resp.Body.Close()
 
 	// Проверка респонса
 	if resp.StatusCode != 200 {
 		send.SendMsg(botUrl, chatId, "Внутренняя ошибка")
-		return
+		return err
 	}
 
 	// Запись респонса
@@ -97,16 +115,17 @@ func SendSunInfo(botUrl string, chatId int) {
 		"\n🌅 Восход наступит в <i>"+time.Unix(int64(rs.Current.Sunrise), 0).Add(3*time.Hour).Format("15:04:05")+"</i>"+
 		"\n🌇 А закат в <i>"+time.Unix(int64(rs.Current.Sunset), 0).Add(3*time.Hour).Format("15:04:05")+"</i>")
 
+	return nil
 }
 
 // Функция отправки дневных карточек
-func SendDailyWeather(botUrl string, chatId int, days int) {
+func SendDailyWeather(botUrl string, chatId int, days int) error {
 
 	// Получение координат из json'a
 	lat, lon, err := repository.GetCoordinates(chatId)
 	if err != nil {
 		send.SendMsg(botUrl, chatId, "Пожалуйста запишите свои координаты командой <b>/set</b>")
-		return
+		return err
 	}
 
 	// Отправка запроса API
@@ -114,14 +133,14 @@ func SendDailyWeather(botUrl string, chatId int, days int) {
 	if err != nil {
 		logrus.Printf("http.Get error: %s", err)
 		send.SendMsg(botUrl, chatId, "Внутренняя ошибка")
-		return
+		return err
 	}
 	defer resp.Body.Close()
 
 	// Проверка респонса
 	if resp.StatusCode != 200 {
 		send.SendMsg(botUrl, chatId, "Внутренняя ошибка")
-		return
+		return err
 	}
 
 	// Запись респонса
@@ -140,16 +159,18 @@ func SendDailyWeather(botUrl string, chatId int, days int) {
 			"\n----------------------------------------------")
 	}
 
+	return nil
+
 }
 
 // Функция отправки погоды на данный момент
-func SendCurrentWeather(botUrl string, chatId int) {
+func SendCurrentWeather(botUrl string, chatId int) error {
 
 	// Получение координат из json'a
 	lat, lon, err := repository.GetCoordinates(chatId)
 	if err != nil {
 		send.SendMsg(botUrl, chatId, "Пожалуйста запишите свои координаты командой <b>/set</b>")
-		return
+		return err
 	}
 
 	// Ссылка к апи погоды
@@ -157,14 +178,14 @@ func SendCurrentWeather(botUrl string, chatId int) {
 	if err != nil {
 		logrus.Printf("http.Get error: %s", err)
 		send.SendMsg(botUrl, chatId, "Внутренняя ошибка")
-		return
+		return err
 	}
 	defer resp.Body.Close()
 
 	// Проверка респонса
 	if resp.StatusCode != 200 {
 		send.SendMsg(botUrl, chatId, "Внутренняя ошибка")
-		return
+		return err
 	}
 
 	// Запись респонса
@@ -181,4 +202,5 @@ func SendCurrentWeather(botUrl string, chatId int) {
 		"\n💧Влажность воздуха: <b>"+strconv.Itoa(rs.Current.Humidity)+"%"+"</b>"+
 		"\n----------------------------------------------")
 
+	return nil
 }

@@ -25,8 +25,7 @@ func Respond(botUrl string, update telegram.Update) {
 		case "/week":
 			api.SendDailyWeather(botUrl, update.Message.Chat.ChatId, 7)
 		case "/weather":
-			api.SendCurrentWeather(botUrl, update.Message.Chat.ChatId)
-			api.SendDailyWeather(botUrl, update.Message.Chat.ChatId, 2)
+			api.SendClassicWeather(botUrl, update.Message.Chat.ChatId)
 		case "/current":
 			api.SendCurrentWeather(botUrl, update.Message.Chat.ChatId)
 		case "/sun":
