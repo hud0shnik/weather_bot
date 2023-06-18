@@ -17,24 +17,24 @@ func SetCoordinates(botUrl string, chatId int, lat, lon string) {
 
 	// Проверка на параметры
 	if lat == "" || lon == "" {
-		send.SendMsg(botUrl, chatId, "Вы не написали координаты, воспользуйтесь шаблоном ниже:\n\n/set 55.5692101 37.4588852")
+		send.SendMsg(botUrl, chatId, "Вы не задали координаты, воспользуйтесь шаблоном ниже:\n\n/set 55.5692101 37.4588852")
 		return
 	}
 
 	// Проверка координат
 	latFloat, err := strconv.ParseFloat(lat, 64)
-	if err != nil || !(latFloat > -90 && latFloat < 90) {
+	if err != nil || !(latFloat >= -90 && latFloat <= 90) {
 		send.SendMsg(botUrl, chatId, "Широта (первый параметр) может принимать значения в диапазоне от <b>-90 до 90</b>.\nВоспользуйтесь шаблоном ниже:\n\n/set 55.5692101 37.4588852")
 		return
 	}
 	lonFloat, err := strconv.ParseFloat(lon, 64)
-	if err != nil || !(lonFloat > -180 && lonFloat < 180) {
+	if err != nil || !(lonFloat >= -180 && lonFloat <= 180) {
 		send.SendMsg(botUrl, chatId, "Долгота (второй параметр) может принимать значения в диапазоне от <b>-180 до 180</b>.\nВоспользуйтесь шаблоном ниже:\n\n/set 55.5692101 37.4588852")
 		return
 	}
 
 	// Открытие json файла для чтения координат
-	file, err := os.Open("weather/coordinates.json")
+	file, err := os.Open("internal/repository/coordinates.json")
 	if err != nil {
 		logrus.Fatalf("Unable to open file: %s", err)
 		return
@@ -46,11 +46,11 @@ func SetCoordinates(botUrl string, chatId int, lat, lon string) {
 	body, _ := ioutil.ReadAll(file)
 	json.Unmarshal(body, &m)
 
-	// Обновление введенной информации
+	// Обновление записей в карте
 	m[strconv.Itoa(chatId)] = lat + " " + lon
 
 	// Открытие файла
-	fileU, err := os.Create("weather/coordinates.json")
+	fileU, err := os.Create("internal/repository/coordinates.json")
 	if err != nil {
 		logrus.Fatalf("Unable to create file: %s", err)
 		return
@@ -68,7 +68,7 @@ func SetCoordinates(botUrl string, chatId int, lat, lon string) {
 func GetCoordinates(chatId int) (string, string, error) {
 
 	// Чтение данных из json файла с координатами
-	file, err := os.Open("weather/coordinates.json")
+	file, err := os.Open("internal/repository/coordinates.json")
 	if err != nil {
 		logrus.Fatalf("Unable to open file: %s", err)
 		return "", "", err
