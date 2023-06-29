@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"time"
 
 	"github.com/hud0shnik/weather_bot/internal/handler"
 	"github.com/hud0shnik/weather_bot/internal/telegram"
@@ -12,7 +13,9 @@ import (
 func main() {
 
 	// Настройка логгера
-	logrus.SetFormatter(&logrus.JSONFormatter{})
+	logrus.SetFormatter(&logrus.JSONFormatter{
+		TimestampFormat: time.DateTime,
+	})
 
 	// Загрузка переменных окружения
 	godotenv.Load()
