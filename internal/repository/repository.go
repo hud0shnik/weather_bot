@@ -17,7 +17,8 @@ func SetCoordinates(botUrl string, chatId int, lat, lon string) {
 
 	// Проверка на параметры
 	if lat == "" || lon == "" {
-		send.SendMsg(botUrl, chatId, "Вы не задали координаты, воспользуйтесь шаблоном ниже:\n\n/set 55.5692101 37.4588852")
+		send.SendMsg(botUrl, chatId, "Вы не задали координаты, воспользуйтесь шаблоном ниже:")
+		send.SendMsg(botUrl, chatId, "/set 55.5692101 37.4588852")
 		return
 	}
 
