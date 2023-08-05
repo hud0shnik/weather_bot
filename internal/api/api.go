@@ -2,14 +2,14 @@ package api
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
 
 	"github.com/hud0shnik/weather_bot/internal/repository"
-	"github.com/hud0shnik/weather_bot/internal/send"
+	"github.com/hud0shnik/weather_bot/internal/telegram"
 	"github.com/sirupsen/logrus"
 )
 
@@ -86,7 +86,7 @@ func SendSunInfo(botUrl string, chatId int) error {
 	// Получение координат из json'a
 	lat, lon, err := repository.GetCoordinates(chatId)
 	if err != nil {
-		send.SendMsg(botUrl, chatId, "Пожалуйста запишите свои координаты командой <b>/set</b>")
+		telegram.SendMsg(botUrl, chatId, "Пожалуйста запишите свои координаты командой <b>/set</b>")
 		return err
 	}
 
@@ -94,24 +94,24 @@ func SendSunInfo(botUrl string, chatId int) error {
 	resp, err := http.Get("https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&lang=ru&exclude=minutely,hourly,daily,alerts&units=metric&appid=" + os.Getenv("WEATHER_TOKEN"))
 	if err != nil {
 		logrus.Printf("http.Get error: %s", err)
-		send.SendMsg(botUrl, chatId, "Внутренняя ошибка")
+		telegram.SendMsg(botUrl, chatId, "Внутренняя ошибка")
 		return err
 	}
 	defer resp.Body.Close()
 
 	// Проверка респонса
 	if resp.StatusCode != 200 {
-		send.SendMsg(botUrl, chatId, "Внутренняя ошибка")
+		telegram.SendMsg(botUrl, chatId, "Внутренняя ошибка")
 		return err
 	}
 
 	// Запись респонса
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 	var rs = new(weatherAPIResponse)
 	json.Unmarshal(body, &rs)
 
 	// Вывод полученных данных пользователю
-	send.SendMsg(botUrl, chatId, "🌄 Восход и закат на сегодня 🌄"+
+	telegram.SendMsg(botUrl, chatId, "🌄 Восход и закат на сегодня 🌄"+
 		"\n🌅 Восход наступит в <i>"+time.Unix(int64(rs.Current.Sunrise), 0).Add(3*time.Hour).Format("15:04:05")+"</i>"+
 		"\n🌇 А закат в <i>"+time.Unix(int64(rs.Current.Sunset), 0).Add(3*time.Hour).Format("15:04:05")+"</i>")
 
@@ -124,7 +124,7 @@ func SendDailyWeather(botUrl string, chatId int, days int) error {
 	// Получение координат из json'a
 	lat, lon, err := repository.GetCoordinates(chatId)
 	if err != nil {
-		send.SendMsg(botUrl, chatId, "Пожалуйста запишите свои координаты командой <b>/set</b>")
+		telegram.SendMsg(botUrl, chatId, "Пожалуйста запишите свои координаты командой <b>/set</b>")
 		return err
 	}
 
@@ -132,25 +132,25 @@ func SendDailyWeather(botUrl string, chatId int, days int) error {
 	resp, err := http.Get("https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&lang=ru&exclude=minutely,current,minutely,alerts&units=metric&appid=" + os.Getenv("WEATHER_TOKEN"))
 	if err != nil {
 		logrus.Printf("http.Get error: %s", err)
-		send.SendMsg(botUrl, chatId, "Внутренняя ошибка")
+		telegram.SendMsg(botUrl, chatId, "Внутренняя ошибка")
 		return err
 	}
 	defer resp.Body.Close()
 
 	// Проверка респонса
 	if resp.StatusCode != 200 {
-		send.SendMsg(botUrl, chatId, "Внутренняя ошибка")
+		telegram.SendMsg(botUrl, chatId, "Внутренняя ошибка")
 		return err
 	}
 
 	// Запись респонса
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 	var rs = new(weatherAPIResponse)
 	json.Unmarshal(body, &rs)
 
 	// Вывод полученных данных
 	for n := 1; n < days+1; n++ {
-		send.SendMsg(botUrl, chatId, "Погода на <b>"+time.Unix(rs.Daily[n].Dt, 0).Format("02/01/2006")+"</b>:"+
+		telegram.SendMsg(botUrl, chatId, "Погода на <b>"+time.Unix(rs.Daily[n].Dt, 0).Format("02/01/2006")+"</b>:"+
 			"\n----------------------------------------------"+
 			"\n🌡Температура: <b>"+strconv.Itoa(int(rs.Daily[n].Temp.Morning))+"°</b>"+" -> <b>"+strconv.Itoa(int(rs.Daily[n].Temp.Evening))+"°</b>"+
 			"\n🤔Ощущается как: <b>"+strconv.Itoa(int(rs.Daily[n].Feels_like.Morning))+"°</b>"+" -> <b>"+strconv.Itoa(int(rs.Daily[n].Feels_like.Evening))+"°</b>"+
@@ -169,7 +169,7 @@ func SendCurrentWeather(botUrl string, chatId int) error {
 	// Получение координат из json'a
 	lat, lon, err := repository.GetCoordinates(chatId)
 	if err != nil {
-		send.SendMsg(botUrl, chatId, "Пожалуйста запишите свои координаты командой <b>/set</b>")
+		telegram.SendMsg(botUrl, chatId, "Пожалуйста запишите свои координаты командой <b>/set</b>")
 		return err
 	}
 
@@ -177,24 +177,24 @@ func SendCurrentWeather(botUrl string, chatId int) error {
 	resp, err := http.Get("https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&lang=ru&exclude=minutely,hourly,daily,alerts&units=metric&appid=" + os.Getenv("WEATHER_TOKEN"))
 	if err != nil {
 		logrus.Printf("http.Get error: %s", err)
-		send.SendMsg(botUrl, chatId, "Внутренняя ошибка")
+		telegram.SendMsg(botUrl, chatId, "Внутренняя ошибка")
 		return err
 	}
 	defer resp.Body.Close()
 
 	// Проверка респонса
 	if resp.StatusCode != 200 {
-		send.SendMsg(botUrl, chatId, "Внутренняя ошибка")
+		telegram.SendMsg(botUrl, chatId, "Внутренняя ошибка")
 		return err
 	}
 
 	// Запись респонса
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 	var rs = new(weatherAPIResponse)
 	json.Unmarshal(body, &rs)
 
 	// Вывод полученных данных
-	send.SendMsg(botUrl, chatId, "Погода <i>сейчас</i>"+":"+
+	telegram.SendMsg(botUrl, chatId, "Погода <i>сейчас</i>"+":"+
 		"\n----------------------------------------------"+
 		"\n🌡Температура: <b>"+strconv.Itoa(int(rs.Current.Temp))+"</b>"+
 		"\n🤔Ощущается как: <b>"+strconv.Itoa(int(rs.Current.Feels_like))+"°"+"</b>"+

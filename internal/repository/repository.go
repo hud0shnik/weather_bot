@@ -3,12 +3,12 @@ package repository
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"os"
 	"strconv"
 	"strings"
 
-	"github.com/hud0shnik/weather_bot/internal/send"
+	"github.com/hud0shnik/weather_bot/internal/telegram"
 	"github.com/sirupsen/logrus"
 )
 
@@ -17,20 +17,20 @@ func SetCoordinates(botUrl string, chatId int, lat, lon string) {
 
 	// Проверка на параметры
 	if lat == "" || lon == "" {
-		send.SendMsg(botUrl, chatId, "Вы не задали координаты, воспользуйтесь шаблоном ниже:")
-		send.SendMsg(botUrl, chatId, "/set 55.5692101 37.4588852")
+		telegram.SendMsg(botUrl, chatId, "Вы не задали координаты, воспользуйтесь шаблоном ниже:")
+		telegram.SendMsg(botUrl, chatId, "/set 55.5692101 37.4588852")
 		return
 	}
 
 	// Проверка координат
 	latFloat, err := strconv.ParseFloat(lat, 64)
 	if err != nil || !(latFloat >= -90 && latFloat <= 90) {
-		send.SendMsg(botUrl, chatId, "Широта (первый параметр) может принимать значения в диапазоне от <b>-90 до 90</b>.\nВоспользуйтесь шаблоном ниже:\n\n/set 55.5692101 37.4588852")
+		telegram.SendMsg(botUrl, chatId, "Широта (первый параметр) может принимать значения в диапазоне от <b>-90 до 90</b>.\nВоспользуйтесь шаблоном ниже:\n\n/set 55.5692101 37.4588852")
 		return
 	}
 	lonFloat, err := strconv.ParseFloat(lon, 64)
 	if err != nil || !(lonFloat >= -180 && lonFloat <= 180) {
-		send.SendMsg(botUrl, chatId, "Долгота (второй параметр) может принимать значения в диапазоне от <b>-180 до 180</b>.\nВоспользуйтесь шаблоном ниже:\n\n/set 55.5692101 37.4588852")
+		telegram.SendMsg(botUrl, chatId, "Долгота (второй параметр) может принимать значения в диапазоне от <b>-180 до 180</b>.\nВоспользуйтесь шаблоном ниже:\n\n/set 55.5692101 37.4588852")
 		return
 	}
 
@@ -44,7 +44,7 @@ func SetCoordinates(botUrl string, chatId int, lat, lon string) {
 
 	// Запись данных в карту
 	var m map[string]string
-	body, _ := ioutil.ReadAll(file)
+	body, _ := io.ReadAll(file)
 	json.Unmarshal(body, &m)
 
 	// Обновление записей в карте
@@ -62,7 +62,7 @@ func SetCoordinates(botUrl string, chatId int, lat, lon string) {
 	result, _ := json.Marshal(m)
 	fileU.Write(result)
 
-	send.SendMsg(botUrl, chatId, "Записал координаты!")
+	telegram.SendMsg(botUrl, chatId, "Записал координаты!")
 }
 
 // Функция получения координат
@@ -78,7 +78,7 @@ func GetCoordinates(chatId int) (string, string, error) {
 
 	// Запись данных в структуру
 	var m map[string]string
-	body, _ := ioutil.ReadAll(file)
+	body, _ := io.ReadAll(file)
 	json.Unmarshal(body, &m)
 
 	// Поиск и проверка на наличие записи

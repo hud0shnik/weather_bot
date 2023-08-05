@@ -6,7 +6,6 @@ import (
 	"github.com/hud0shnik/weather_bot/internal/api"
 	"github.com/hud0shnik/weather_bot/internal/commands"
 	"github.com/hud0shnik/weather_bot/internal/repository"
-	"github.com/hud0shnik/weather_bot/internal/send"
 	"github.com/hud0shnik/weather_bot/internal/telegram"
 )
 
@@ -35,13 +34,13 @@ func Respond(botUrl string, update telegram.Update) {
 		case "/help", "/start":
 			commands.Help(botUrl, update.Message.Chat.ChatId)
 		default:
-			send.SendMsg(botUrl, update.Message.Chat.ChatId, "Я не понимаю, воспользуйтесь /help")
+			telegram.SendMsg(botUrl, update.Message.Chat.ChatId, "Я не понимаю, воспользуйтесь /help")
 		}
 
 	} else {
 
 		// Если пользователь отправил не сообщение:
-		send.SendMsg(botUrl, update.Message.Chat.ChatId, "Пока я воспринимаю только текст")
+		telegram.SendMsg(botUrl, update.Message.Chat.ChatId, "Пока я воспринимаю только текст")
 
 	}
 

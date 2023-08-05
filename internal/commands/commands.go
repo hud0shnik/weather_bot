@@ -1,10 +1,10 @@
 package commands
 
-import "github.com/hud0shnik/weather_bot/internal/send"
+import "github.com/hud0shnik/weather_bot/internal/telegram"
 
 // Функция вывода списка команд
 func Help(botUrl string, chatId int) {
-	send.SendMsg(botUrl, chatId, "Команды: \n"+
+	telegram.SendMsg(botUrl, chatId, "Команды: \n"+
 		"/set - установить координаты\n"+
 		"/weather - погода на сегодня и два следующих дня\n"+
 		"/current - погода прямо сейчас\n"+
