@@ -1,5 +1,7 @@
 # 🤖 Weather_bot ⛅
 
+<img src="https://wakatime.com/badge/user/ee2709af-fc5f-498b-aaa1-3ea47bf12a00/project/e497e66d-2d69-43bf-9e50-977fe1e77dfc.svg?style=for-the-badge">
+
 [![License - BSD 3-Clause](https://img.shields.io/static/v1?label=License&message=BSD+3-Clause&color=%239a68af&style=for-the-badge)](/LICENSE)
 
 <h3 align="left">🛠 Стек технологий:</h3>
