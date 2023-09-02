@@ -37,9 +37,8 @@ sudo docker build -t weather_bot .
 
 Запуск
 ```
-docker run -e TOKEN="<token_value>" -e WEATHER_TOKEN="<token_value>" weather_bot
+docker run --name=weather_bot -e TOKEN="<token_value>" -e WEATHER_TOKEN="<token_value>" weather_bot
 ```
-
 
 <h3 align="left">🔗 Ссылка на бота:</h3>
 <h1 align="center">
