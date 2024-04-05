@@ -33,8 +33,8 @@ func main() {
 		// Получение апдейтов
 		updates, err := telegram.GetUpdates(botUrl, offSet)
 		if err != nil {
-			logrus.Fatalf("getUpdates error: %s", err)
-			return
+			logrus.Warnf("getUpdates error: %s", err)
+			continue
 		}
 
 		// Обработка апдейтов
